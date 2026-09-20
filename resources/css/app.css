@@ -3,7 +3,35 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap');
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+
+    /* ── Medixa Brand Palette ─────────────────────────── */
+    --color-medixa-50:  #edfaf7;
+    --color-medixa-100: #d2f4ec;
+    --color-medixa-200: #a9e8da;
+    --color-medixa-300: #72d5c2;
+    --color-medixa-400: #3ebba6;
+    --color-medixa-500: #22a08c;
+    --color-medixa-600: #188071;
+    --color-medixa-700: #16675c;
+    --color-medixa-800: #16524a;
+    --color-medixa-900: #16453e;
+    --color-medixa-950: #072824;
+
+    --color-surface-900: #0d1117;
+    --color-surface-800: #161b22;
+    --color-surface-700: #21262d;
+    --color-surface-600: #30363d;
+    --color-surface-500: #3d444d;
+    --color-surface-400: #656d76;
+    --color-surface-300: #9198a1;
+    --color-surface-200: #b9bfc8;
+    --color-surface-100: #d1d7de;
+
+    --color-accent-400: #f0883e;
+    --color-accent-300: #ffa657;
 }
