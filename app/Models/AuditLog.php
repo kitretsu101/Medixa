@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['actor_id', 'patient_id', 'resource_type', 'resource_id', 'consent_token_id', 'accessed_at'])]
 class AuditLog extends Model
 {
+    /** The table associated with the model. */
+    protected $table = 'audit_log';
+
     /** Immutable log — no auto-timestamps. */
     public $timestamps = false;
 

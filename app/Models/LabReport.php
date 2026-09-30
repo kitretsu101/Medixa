@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['patient_id', 'doctor_id', 'report_title', 'file_path', 'review_status', 'uploaded_at'])]
 class LabReport extends Model
 {
+    use HasFactory;
+
     /**
      * Get the attributes that should be cast.
      *

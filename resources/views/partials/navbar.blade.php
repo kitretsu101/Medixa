@@ -26,12 +26,24 @@
 
             {{-- Auth CTA --}}
             <div class="flex items-center gap-3">
-                <a href="#" class="hidden sm:inline-flex text-sm font-medium text-[#9198a1] hover:text-white transition-colors duration-200">
-                    Sign In
-                </a>
-                <a href="#" class="inline-flex items-center gap-1.5 rounded-lg bg-[#22a08c] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#22a08c]/20 hover:bg-[#188071] hover:shadow-[#22a08c]/40 transition-all duration-200">
-                    Book Appointment
-                </a>
+                @auth
+                    <a href="{{ route('dashboard') }}" class="px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-[#22a08c] hover:bg-[#188071] shadow-md shadow-[#22a08c]/20 transition-all duration-200">
+                        {{ ucfirst(Auth::user()->role) }} Dashboard &rarr;
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="text-xs font-medium text-[#9198a1] hover:text-white transition-colors duration-200">
+                            Log Out
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="inline-flex text-sm font-medium text-[#9198a1] hover:text-white transition-colors duration-200">
+                        Sign In
+                    </a>
+                    <a href="{{ route('register') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-[#22a08c] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#22a08c]/20 hover:bg-[#188071] hover:shadow-[#22a08c]/40 transition-all duration-200">
+                        Register
+                    </a>
+                @endauth
             </div>
         </div>
     </div>

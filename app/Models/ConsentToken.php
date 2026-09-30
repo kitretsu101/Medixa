@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['patient_id', 'grantee_id', 'resource_type', 'resource_id', 'issued_at', 'expires_at', 'revoked_at'])]
 class ConsentToken extends Model
 {
-    use HasUuids;
+    use HasFactory, HasUuids;
 
     /** No auto-timestamps — we manage issued_at manually. */
     public $timestamps = false;
