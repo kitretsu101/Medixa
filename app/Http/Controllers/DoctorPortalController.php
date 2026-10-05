@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\ConsentToken;
 use App\Models\LabReport;
+use App\Models\LiveQueue;
 use App\Models\Prescription;
 use App\Models\User;
 use App\Services\AuditService;
@@ -52,11 +53,18 @@ class DoctorPortalController extends Controller
             ->take(6)
             ->get();
 
+        // Live Queue State
+        $liveQueue = LiveQueue::firstOrCreate(
+            ['doctor_id' => $doctor->id],
+            ['current_running_serial' => 0, 'doctor_present_status' => false]
+        );
+
         return view('doctor.dashboard', compact(
             'totalPatientsSeen',
             'pendingAppointments',
             'pendingReportReviews',
             'recentAppointments',
+            'liveQueue',
         ));
     }
 

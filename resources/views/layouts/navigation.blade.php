@@ -40,7 +40,19 @@
                         </x-nav-link>
                     @elseif(Auth::user()->isAdmin())
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                            {{ __('Admin Dashboard') }}
+                            {{ __('Dashboard') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.departments.index')" :active="request()->routeIs('admin.departments.*')">
+                            {{ __('Departments') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.doctors.index')" :active="request()->routeIs('admin.doctors.*')">
+                            {{ __('Doctors') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.schedule')" :active="request()->routeIs('admin.schedule')">
+                            {{ __('Schedule') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.audit-oversight')" :active="request()->routeIs('admin.audit-oversight')">
+                            {{ __('Audit Oversight') }}
                         </x-nav-link>
                     @else
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
@@ -127,7 +139,19 @@
                 </x-responsive-nav-link>
             @elseif(Auth::user()->isAdmin())
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    {{ __('Admin Dashboard') }}
+                    {{ __('Dashboard') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.departments.index')" :active="request()->routeIs('admin.departments.*')">
+                    {{ __('Departments') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.doctors.index')" :active="request()->routeIs('admin.doctors.*')">
+                    {{ __('Doctors') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.schedule')" :active="request()->routeIs('admin.schedule')">
+                    {{ __('Schedule') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.audit-oversight')" :active="request()->routeIs('admin.audit-oversight')">
+                    {{ __('Audit Oversight') }}
                 </x-responsive-nav-link>
             @else
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">

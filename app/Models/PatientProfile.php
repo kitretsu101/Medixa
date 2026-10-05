@@ -18,6 +18,9 @@ class PatientProfile extends Model
     {
         return [
             'dob' => 'date',
+            'emergency_contact' => 'encrypted',
+            'phone' => 'encrypted',
+            'nid' => 'encrypted',
         ];
     }
 

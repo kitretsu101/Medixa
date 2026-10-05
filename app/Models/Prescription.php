@@ -21,6 +21,8 @@ class Prescription extends Model
     {
         return [
             'medicines' => 'array',
+            'instructions' => 'encrypted',
+            'notes' => 'encrypted',
         ];
     }
 

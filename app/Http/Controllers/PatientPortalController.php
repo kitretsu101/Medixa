@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appointment;
 use App\Models\AssistanceRequest;
 use App\Models\AuditLog;
 use App\Models\LabReport;
@@ -47,13 +48,20 @@ class PatientPortalController extends Controller
             ->take(3)
             ->get();
 
+        $activeAppointment = Appointment::where('patient_id', $userId)
+            ->whereIn('status', ['confirmed', 'pending'])
+            ->with(['doctor.liveQueue', 'doctor.doctorProfile.department'])
+            ->orderBy('appointment_date')
+            ->first();
+
         return view('patient.dashboard', compact(
             'prescriptionCount',
             'labReportCount',
             'activeConsentsCount',
             'openAssistanceCount',
             'recentPrescriptions',
-            'recentLabReports'
+            'recentLabReports',
+            'activeAppointment',
         ));
     }
 

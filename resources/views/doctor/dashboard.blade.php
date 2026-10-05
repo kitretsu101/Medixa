@@ -29,6 +29,51 @@
                 </div>
             @endif
 
+            <!-- Live OPD Queue Control Console -->
+            <div class="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-6 relative">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2.5">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                <span class="w-2 h-2 mr-1.5 bg-indigo-500 rounded-full animate-pulse"></span> Live WebSocket Broadcasting
+                            </span>
+                            <span id="queue-status-toast" class="text-xs font-medium text-emerald-600 transition-opacity opacity-0"></span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 tracking-tight">OPD Live Queue Control Station</h3>
+                        <p class="text-xs text-gray-500">Manage real-time chamber serial callers and broadcast current availability to patients.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-4 sm:gap-6">
+                        <!-- Presence Toggle -->
+                        <div class="flex flex-col sm:items-end">
+                            <span class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Chamber Status</span>
+                            <button id="toggle-presence-btn" type="button" onclick="toggleDoctorPresence()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition shadow-sm {{ $liveQueue->doctor_present_status ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100' : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100' }}">
+                                <span id="presence-dot" class="w-2.5 h-2.5 rounded-full {{ $liveQueue->doctor_present_status ? 'bg-emerald-500 animate-ping' : 'bg-gray-400' }}"></span>
+                                <span id="presence-text">{{ $liveQueue->doctor_present_status ? 'Doctor Present' : 'Doctor Away' }}</span>
+                            </button>
+                        </div>
+
+                        <!-- Current Serial Counter & Controls -->
+                        <div class="flex items-center bg-gray-50 rounded-2xl border border-gray-200/80 p-2 gap-3">
+                            <div class="px-4 py-1 text-center">
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500 block">Current Serial</span>
+                                <span id="running-serial-display" class="font-mono text-3xl font-black text-indigo-700">#{{ $liveQueue->current_running_serial }}</span>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 pr-2">
+                                <button id="decrement-serial-btn" type="button" onclick="decrementSerial()" title="Previous Serial (-1)" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold hover:bg-gray-100 active:scale-95 transition flex items-center justify-center shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"/></svg>
+                                </button>
+                                <button id="increment-serial-btn" type="button" onclick="incrementSerial()" title="Call Next Serial (+1)" class="px-4 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold text-xs tracking-wider transition flex items-center gap-1.5 shadow-sm">
+                                    <span>Call Next</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Workload Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Stat 1: Total Patients Seen -->
@@ -168,4 +213,75 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        function showQueueToast(msg) {
+            const toast = document.getElementById('queue-status-toast');
+            if (!toast) return;
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => toast.classList.add('opacity-0'), 3000);
+        }
+
+        async function postQueueAction(url) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Queue request failed');
+                }
+
+                const data = await response.json();
+                updateQueueUI(data);
+                showQueueToast(data.message || 'Queue updated & broadcasted');
+            } catch (err) {
+                console.error('Live queue error:', err);
+                showQueueToast('Error updating queue.');
+            }
+        }
+
+        function updateQueueUI(data) {
+            if (data.current_serial !== undefined) {
+                const display = document.getElementById('running-serial-display');
+                if (display) display.textContent = '#' + data.current_serial;
+            }
+
+            if (data.doctor_present !== undefined) {
+                const btn = document.getElementById('toggle-presence-btn');
+                const dot = document.getElementById('presence-dot');
+                const text = document.getElementById('presence-text');
+
+                if (data.doctor_present) {
+                    btn.className = 'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition shadow-sm bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100';
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping';
+                    text.textContent = 'Doctor Present';
+                } else {
+                    btn.className = 'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition shadow-sm bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100';
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-gray-400';
+                    text.textContent = 'Doctor Away';
+                }
+            }
+        }
+
+        function incrementSerial() {
+            postQueueAction('{{ route('doctor.queue.increment') }}');
+        }
+
+        function decrementSerial() {
+            postQueueAction('{{ route('doctor.queue.decrement') }}');
+        }
+
+        function toggleDoctorPresence() {
+            postQueueAction('{{ route('doctor.queue.toggle-presence') }}');
+        }
+    </script>
+    @endpush
 </x-app-layout>
