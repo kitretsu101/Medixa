@@ -14,7 +14,8 @@ class AuditService
         int $patientId,
         string $resourceType,
         int $resourceId,
-        ?string $consentTokenId = null
+        ?string $consentTokenId = null,
+        ?string $ipAddress = null,
     ): AuditLog {
         return AuditLog::create([
             'actor_id' => $actorId,
@@ -22,6 +23,7 @@ class AuditService
             'resource_type' => $resourceType,
             'resource_id' => $resourceId,
             'consent_token_id' => $consentTokenId,
+            'ip_address' => $ipAddress,
             'accessed_at' => now(),
         ]);
     }

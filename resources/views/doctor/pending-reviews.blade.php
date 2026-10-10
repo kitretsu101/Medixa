@@ -56,9 +56,6 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="font-medium text-gray-900">{{ $report->patient?->name }}</div>
-                                            <div class="text-xs text-gray-500">
-                                                Blood: {{ $report->patient?->patientProfile?->blood_group ?? 'N/A' }}
-                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-gray-600 text-xs">
                                             {{ $report->uploaded_at ? $report->uploaded_at->format('M d, Y H:i') : $report->created_at->format('M d, Y H:i') }}
@@ -89,7 +86,7 @@
                                         </td>
                                         <td class="px-6 py-4 text-right space-x-2">
                                             @if($report->active_consent_token && $report->active_consent_token->isActive())
-                                                <a href="{{ route('doctor.lab-reports.show', $report) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-semibold shadow-sm transition">
+                                                <a href="{{ route('doctor.lab-reports.open', $report) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-semibold shadow-sm transition">
                                                     View Report &rarr;
                                                 </a>
                                             @else
@@ -98,6 +95,17 @@
                                             <a href="{{ route('doctor.patients.history', $report->patient_id) }}" class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg text-xs font-medium transition">
                                                 History
                                             </a>
+                                            <form method="POST" action="{{ route('doctor.lab-reports.review', $report) }}" class="inline-flex flex-wrap justify-end gap-2 mt-2">
+                                                @csrf
+                                                <label class="sr-only" for="outcome-{{ $report->id }}">Clinical outcome</label>
+                                                <select id="outcome-{{ $report->id }}" name="clinical_outcome" class="rounded-lg border-gray-300 text-xs" required>
+                                                    <option value="routine_follow_up">Routine follow-up</option>
+                                                    <option value="needs_attention">Needs attention</option>
+                                                    <option value="urgent_clinical_review">Urgent clinical review</option>
+                                                    <option value="physical_consultation">Physical visit requested</option>
+                                                </select>
+                                                <button type="submit" class="px-3 py-1.5 bg-teal-700 text-white rounded-lg text-xs font-semibold">Record decision</button>
+                                            </form>
                                         </td>
                                     </tr>
                                 @endforeach

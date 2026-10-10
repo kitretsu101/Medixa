@@ -40,7 +40,7 @@
                             <thead class="bg-gray-50 text-gray-600 font-semibold text-xs uppercase tracking-wider">
                                 <tr>
                                     <th class="px-6 py-3.5 text-left">Patient Name</th>
-                                    <th class="px-6 py-3.5 text-left">Contact & Blood Group</th>
+                                    <th class="px-6 py-3.5 text-left">Link</th>
                                     <th class="px-6 py-3.5 text-center">Appointments</th>
                                     <th class="px-6 py-3.5 text-left">Last Appointment</th>
                                     <th class="px-6 py-3.5 text-right">Actions</th>
@@ -53,16 +53,8 @@
                                             <div class="font-bold text-gray-900">{{ $patient->name }}</div>
                                             <div class="text-xs text-gray-500 font-mono">{{ $patient->email }}</div>
                                         </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-xs">
-                                                <span class="font-semibold text-gray-700">Blood:</span> 
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-50 text-rose-700">
-                                                    {{ $patient->patientProfile?->blood_group ?? 'Unspecified' }}
-                                                </span>
-                                            </div>
-                                            <div class="text-xs text-gray-500 mt-0.5">
-                                                <span class="font-semibold">Emergency:</span> {{ $patient->patientProfile?->emergency_contact ?? 'None listed' }}
-                                            </div>
+                                        <td class="px-6 py-4 text-xs text-gray-500">
+                                            Linked by appointment
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">

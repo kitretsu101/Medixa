@@ -10,7 +10,7 @@
                         Consent-Scoped Access
                     </span>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">Patient ID: #{{ $patient->id }} &bull; DOB: {{ $patient->patientProfile?->dob ? $patient->patientProfile->dob->format('M d, Y') : 'Unrecorded' }} &bull; Blood: {{ $patient->patientProfile?->blood_group ?? 'Unspecified' }}</p>
+                <p class="text-xs text-gray-500 mt-1">Only prescriptions and lab reports covered by an active consent token are listed below.</p>
             </div>
             <div class="flex items-center gap-3">
                 <a href="{{ route('doctor.patients.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg text-xs font-semibold uppercase tracking-wider transition">
@@ -22,6 +22,21 @@
 
     <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            @if(session('success'))
+                <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-800">{{ session('success') }}</div>
+            @endif
+
+            <form method="POST" action="{{ route('doctor.lab-orders.store', $patient) }}" class="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row gap-3 sm:items-end">
+                @csrf
+                <div class="flex-1">
+                    <label for="test_name" class="block text-xs font-semibold uppercase tracking-wide text-gray-500">Order a laboratory test</label>
+                    <input id="test_name" name="test_name" value="{{ old('test_name') }}" placeholder="Complete Blood Count (CBC)" class="mt-1 block w-full rounded-lg border-gray-300 text-sm">
+                    @error('test_name')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold">Create lab order</button>
+            </form>
 
             <!-- Consent Notice Banner -->
             <div class="p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl shadow-sm text-amber-900">
@@ -90,7 +105,7 @@
                                             Rx Date: {{ $prescription->created_at->format('M d, Y') }}
                                         </div>
                                         <span class="text-xs text-gray-500 font-mono">
-                                            Prescribed by: Dr. {{ $prescription->doctor?->name ?? 'OPD' }}
+                                            Prescribed by: <x-doctor-name :name="$prescription->doctor?->name ?? 'OPD'" />
                                         </span>
                                     </div>
                                     <div class="mt-3">
@@ -160,7 +175,7 @@
                                         <span class="text-xs font-mono text-gray-500 truncate max-w-xs">
                                             Path: {{ basename($report->file_path) }}
                                         </span>
-                                        <a href="{{ route('doctor.lab-reports.show', $report) }}" class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-semibold shadow-sm transition">
+                                        <a href="{{ route('doctor.lab-reports.open', $report) }}" class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-semibold shadow-sm transition">
                                             Inspect Document &rarr;
                                         </a>
                                     </div>

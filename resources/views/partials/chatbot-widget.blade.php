@@ -6,19 +6,19 @@
         id="medixa-chat-launcher"
         type="button"
         onclick="toggleMedixaChat()"
-        class="group relative flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#22a08c] to-[#188071] hover:from-[#188071] hover:to-[#16675c] text-white rounded-full shadow-2xl shadow-[#22a08c]/40 hover:shadow-[#22a08c]/60 transition-all duration-300 hover:scale-105 active:scale-95 border border-[#3ebba6]/30"
+        class="group relative flex items-center gap-3 px-4 py-3 bg-white text-stone-700 rounded-full shadow-lg shadow-stone-300/60 border border-stone-200 hover:border-[#b7ddd4] hover:text-[#3f7f72] transition"
         aria-label="Open Medixa Assistant"
     >
-        <div class="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <div class="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#eef7f4]">
+            <svg class="w-5 h-5 text-[#3f7f72]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
             <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
             <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full"></span>
         </div>
-        <div class="text-left pr-1">
+        <div class="hidden text-left pr-1 lg:block">
             <div class="text-xs font-bold tracking-tight">Medixa Assistant</div>
-            <div class="text-[10px] text-emerald-100 flex items-center gap-1 font-medium">
+            <div class="text-[10px] text-stone-400 flex items-center gap-1 font-medium">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-300"></span> Identity-Blind AI
             </div>
         </div>

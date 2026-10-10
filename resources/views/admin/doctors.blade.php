@@ -79,10 +79,10 @@
                                         {{ number_format($doctor->doctorProfile?->patients_seen_count ?? 0) }}
                                     </td>
                                     <td class="py-4 px-6 text-center">
-                                        @if($doctor->liveQueue && $doctor->liveQueue->is_present)
+                                        @if($doctor->liveQueue && $doctor->liveQueue->doctor_present_status)
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <span class="w-1.5 h-1.5 mr-1 bg-emerald-500 rounded-full animate-pulse"></span>
-                                                Serving #{{ $doctor->liveQueue->current_token }}
+                                                Serving #{{ $doctor->liveQueue->current_running_serial }}
                                             </span>
                                         @else
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">

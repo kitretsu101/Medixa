@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Appointment;
 use App\Models\ConsentToken;
 use App\Models\LabReport;
+use App\Models\PatientProfile;
 use App\Models\Prescription;
 use App\Models\User;
 use App\Services\ConsentService;
@@ -61,11 +62,11 @@ class PatientPortalTest extends TestCase
         $updateResponse->assertRedirect(route('patient.profile'));
         $updateResponse->assertSessionHas('status', 'Profile updated successfully.');
 
-        $this->assertDatabaseHas('patient_profiles', [
-            'user_id' => $patient->id,
-            'blood_group' => 'O+',
-            'emergency_contact' => '+1-555-0199',
-        ]);
+        $profile = PatientProfile::query()->where('user_id', $patient->id)->first();
+        $this->assertNotNull($profile);
+        $this->assertSame('O+', $profile->blood_group);
+        $this->assertSame('+1-555-0199', $profile->emergency_contact);
+        $this->assertNotSame('+1-555-0199', $profile->getRawOriginal('emergency_contact'));
     }
 
     public function test_patient_can_view_merged_record_timeline(): void

@@ -49,6 +49,8 @@ class RegisteredUserController extends Controller
         $route = match ($user->role) {
             'admin' => 'admin.dashboard',
             'doctor' => 'doctor.dashboard',
+            'lab_assistant' => 'lab.dashboard',
+            'receptionist' => 'receptionist.dashboard',
             default => 'patient.dashboard',
         };
 

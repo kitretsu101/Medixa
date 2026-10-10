@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'dob', 'blood_group', 'emergency_contact', 'medical_history'])]
+#[Fillable(['user_id', 'dob', 'blood_group', 'phone', 'nid', 'emergency_contact', 'medical_history'])]
 class PatientProfile extends Model
 {
     /**
@@ -18,9 +18,9 @@ class PatientProfile extends Model
     {
         return [
             'dob' => 'date',
-            'emergency_contact' => 'encrypted',
             'phone' => 'encrypted',
             'nid' => 'encrypted',
+            'emergency_contact' => 'encrypted',
         ];
     }
 

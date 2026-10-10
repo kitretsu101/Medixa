@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['actor_id', 'patient_id', 'resource_type', 'resource_id', 'consent_token_id', 'accessed_at'])]
+#[Fillable(['actor_id', 'patient_id', 'resource_type', 'resource_id', 'consent_token_id', 'ip_address', 'accessed_at'])]
 class AuditLog extends Model
 {
     /** The table associated with the model. */

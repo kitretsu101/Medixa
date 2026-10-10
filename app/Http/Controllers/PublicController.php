@@ -30,14 +30,16 @@ class PublicController extends Controller
             ->with(['doctorProfile.department'])
             ->whereHas('doctorProfile');
 
-        if ($request->filled('department')) {
-            $doctorsQuery->whereHas('doctorProfile', function ($query) use ($request): void {
-                $query->where('department_id', $request->integer('department'));
+        $departmentId = $request->integer('department') ?: $request->integer('department_id');
+
+        if ($departmentId) {
+            $doctorsQuery->whereHas('doctorProfile', function ($query) use ($departmentId): void {
+                $query->where('department_id', $departmentId);
             });
         }
 
         $doctors = $doctorsQuery->get();
-        $selectedDepartmentId = $request->integer('department') ?: null;
+        $selectedDepartmentId = $departmentId ?: null;
 
         return view('public.doctors', compact('doctors', 'departments', 'selectedDepartmentId'));
     }

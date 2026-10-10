@@ -40,4 +40,10 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
     ],
 
+    'ai' => [
+        'provider' => env('AI_PROVIDER', 'openai'),
+        'key' => env('AI_API_KEY', env('OPENAI_API_KEY')),
+        'model' => env('AI_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini')),
+    ],
+
 ];

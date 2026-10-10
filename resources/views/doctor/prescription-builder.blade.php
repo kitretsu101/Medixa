@@ -24,24 +24,7 @@
                     <div>
                         <span class="text-xs font-semibold uppercase tracking-wider text-indigo-600">Patient Details</span>
                         <h3 class="text-xl font-bold text-gray-900 mt-1">{{ $appointment->patient?->name }}</h3>
-                        <p class="text-xs text-gray-500 font-mono">{{ $appointment->patient?->email }}</p>
-                    </div>
-                    <div class="flex flex-wrap gap-4 text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <div>
-                            <span class="text-xs text-gray-500 block">Blood Group</span>
-                            <span class="font-bold text-gray-900">{{ $appointment->patient?->patientProfile?->blood_group ?? 'N/A' }}</span>
-                        </div>
-                        <div class="border-l border-gray-200 pl-4">
-                            <span class="text-xs text-gray-500 block">DOB / Age</span>
-                            <span class="font-bold text-gray-900">
-                                {{ $appointment->patient?->patientProfile?->dob ? $appointment->patient->patientProfile->dob->format('M d, Y') : 'Not set' }}
-                            </span>
-                        </div>
-                        <div class="border-l border-gray-200 pl-4">
-                            <span class="text-xs text-gray-500 block">Emergency Contact</span>
-                            <span class="font-bold text-gray-900">{{ $appointment->patient?->patientProfile?->emergency_contact ?? 'N/A' }}</span>
-                        </div>
-                    </div>
+                        <p class="text-xs text-gray-500">Clinical profile fields stay hidden unless a consent token covers them.</p>
                 </div>
 
                 @if($pendingReports->isNotEmpty())

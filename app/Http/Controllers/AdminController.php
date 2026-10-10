@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\DoctorProfile;
 use App\Models\LabReport;
 use App\Models\User;
+use App\Services\OpdAnalyticsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,13 @@ class AdminController extends Controller
         ];
 
         return view('admin.dashboard', compact('stats'));
+    }
+
+    public function analytics(OpdAnalyticsService $analytics): View
+    {
+        return view('admin.analytics', [
+            'metrics' => $analytics->dashboard(),
+        ]);
     }
 
     // ─── Departments CRUD ────────────────────────────────────────────

@@ -23,7 +23,7 @@
                 <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Doctors On Duty</p>
                     <h3 class="text-3xl font-extrabold text-slate-900 mt-1">
-                        {{ $doctors->filter(fn($d) => $d->liveQueue?->is_present)->count() }} / {{ $doctors->count() }}
+                        {{ $doctors->filter(fn($d) => $d->liveQueue?->doctor_present_status)->count() }} / {{ $doctors->count() }}
                     </h3>
                 </div>
                 <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
@@ -48,8 +48,8 @@
                         $total = $appt->total ?? 0;
                         $completed = $appt->completed ?? 0;
                         $remaining = max(0, $total - $completed);
-                        $isPresent = $doctor->liveQueue?->is_present ?? false;
-                        $currentToken = $doctor->liveQueue?->current_token ?? 0;
+                        $isPresent = (bool) ($doctor->liveQueue?->doctor_present_status ?? false);
+                        $currentToken = (int) ($doctor->liveQueue?->current_running_serial ?? 0);
                     @endphp
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition">
                         <div>

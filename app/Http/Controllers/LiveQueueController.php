@@ -2,34 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\QueueUpdated;
 use App\Models\LiveQueue;
+use App\Services\NotificationService;
+use App\Services\QueueService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class LiveQueueController extends Controller
 {
+    public function __construct(
+        protected QueueService $queueService,
+        protected NotificationService $notificationService,
+    ) {}
+
     /**
      * Increment the doctor's current running serial and broadcast the change.
      */
     public function increment(Request $request): JsonResponse
     {
-        $queue = $this->resolveQueue($request);
+        $queue = $this->queueService->increment($this->resolveQueue($request), $request->user()?->id);
+        $this->notificationService->notifyCalledPatient($queue);
 
-        $queue->update([
-            'current_running_serial' => $queue->current_running_serial + 1,
-            'updated_at' => now(),
-        ]);
-
-        $queue->refresh()->load('doctor');
-        QueueUpdated::dispatch($queue);
-
-        return response()->json([
-            'message' => 'Serial incremented.',
-            'current_serial' => $queue->current_running_serial,
-            'doctor_present' => $queue->doctor_present_status,
-        ]);
+        return $this->payload('Serial incremented.', $queue);
     }
 
     /**
@@ -37,23 +32,36 @@ class LiveQueueController extends Controller
      */
     public function decrement(Request $request): JsonResponse
     {
+        $queue = $this->queueService->decrement($this->resolveQueue($request));
+
+        return $this->payload('Serial decremented.', $queue);
+    }
+
+    public function delay(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'minutes' => ['required', 'integer', 'between:0,180'],
+        ]);
+
+        $queue = $this->queueService->markDelay(
+            $this->resolveQueue($request),
+            (int) $validated['minutes'],
+            $request->user()?->id,
+        );
+
+        return $this->payload(
+            $queue->delay_minutes > 0 ? 'Delay recorded.' : 'Delay cleared.',
+            $queue,
+        );
+    }
+
+    public function pause(Request $request): JsonResponse
+    {
         $queue = $this->resolveQueue($request);
+        $paused = $queue->session_status !== 'paused';
+        $queue = $this->queueService->setPaused($queue, $paused, $request->user()?->id);
 
-        $newSerial = max(0, $queue->current_running_serial - 1);
-
-        $queue->update([
-            'current_running_serial' => $newSerial,
-            'updated_at' => now(),
-        ]);
-
-        $queue->refresh()->load('doctor');
-        QueueUpdated::dispatch($queue);
-
-        return response()->json([
-            'message' => 'Serial decremented.',
-            'current_serial' => $queue->current_running_serial,
-            'doctor_present' => $queue->doctor_present_status,
-        ]);
+        return $this->payload($paused ? 'Queue paused.' : 'Queue resumed.', $queue);
     }
 
     /**
@@ -61,21 +69,12 @@ class LiveQueueController extends Controller
      */
     public function togglePresence(Request $request): JsonResponse
     {
-        $queue = $this->resolveQueue($request);
+        $queue = $this->queueService->togglePresence($this->resolveQueue($request), $request->user()?->id);
 
-        $queue->update([
-            'doctor_present_status' => ! $queue->doctor_present_status,
-            'updated_at' => now(),
-        ]);
-
-        $queue->refresh()->load('doctor');
-        QueueUpdated::dispatch($queue);
-
-        return response()->json([
-            'message' => $queue->doctor_present_status ? 'Marked as present.' : 'Marked as away.',
-            'current_serial' => $queue->current_running_serial,
-            'doctor_present' => $queue->doctor_present_status,
-        ]);
+        return $this->payload(
+            $queue->doctor_present_status ? 'Marked as present.' : 'Marked as away.',
+            $queue,
+        );
     }
 
     /**
@@ -89,9 +88,17 @@ class LiveQueueController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Only doctors can manage live queues.');
         }
 
-        return LiveQueue::firstOrCreate(
-            ['doctor_id' => $doctor->id],
-            ['current_running_serial' => 0, 'doctor_present_status' => false],
-        );
+        return $this->queueService->queueFor($doctor);
+    }
+
+    private function payload(string $message, LiveQueue $queue): JsonResponse
+    {
+        return response()->json([
+            'message' => $message,
+            'current_serial' => $queue->current_running_serial,
+            'doctor_present' => $queue->doctor_present_status,
+            'session_status' => $queue->session_status,
+            'delay_minutes' => (int) $queue->delay_minutes,
+        ]);
     }
 }

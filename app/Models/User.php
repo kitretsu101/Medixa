@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -28,8 +29,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'nid' => 'encrypted',
-            'phone' => 'encrypted',
         ];
     }
 
@@ -48,6 +47,18 @@ class User extends Authenticatable
     public function liveQueue(): HasOne
     {
         return $this->hasOne(LiveQueue::class, 'doctor_id');
+    }
+
+    /** @return HasMany<Appointment, $this> */
+    public function doctorAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'doctor_id');
+    }
+
+    /** @return HasMany<LabReport, $this> */
+    public function assignedReports(): HasMany
+    {
+        return $this->hasMany(LabReport::class, 'doctor_id');
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────
@@ -85,5 +96,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function isLabAssistant(): bool
+    {
+        return $this->role === 'lab_assistant';
+    }
+
+    public function isReceptionist(): bool
+    {
+        return $this->role === 'receptionist';
     }
 }

@@ -5,19 +5,26 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
+                        <x-application-logo class="block h-9 w-9" />
+                        <span class="text-base font-semibold tracking-tight text-gray-900">Medixa</span>
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex">
+                <div class="hidden space-x-4 sm:-my-px sm:ms-8 sm:flex">
                     @if(Auth::user()->isPatient())
                         <x-nav-link :href="route('patient.dashboard')" :active="request()->routeIs('patient.dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('patient.appointments.index')" :active="request()->routeIs('patient.appointments.*')">
+                            {{ __('Appointments') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('patient.timeline')" :active="request()->routeIs('patient.timeline')">
                             {{ __('Medical Timeline') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
+                            {{ __('Notifications') }}
                         </x-nav-link>
                         <x-nav-link :href="route('patient.consent-center')" :active="request()->routeIs('patient.consent-center')">
                             {{ __('Consent Center') }}
@@ -38,6 +45,12 @@
                         <x-nav-link :href="route('doctor.pending-reviews')" :active="request()->routeIs('doctor.pending-reviews')">
                             {{ __('Pending Reviews') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('doctor.assistance.index')" :active="request()->routeIs('doctor.assistance.*')">
+                            {{ __('Assistance') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
+                            {{ __('Notifications') }}
+                        </x-nav-link>
                     @elseif(Auth::user()->isAdmin())
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             {{ __('Dashboard') }}
@@ -54,6 +67,26 @@
                         <x-nav-link :href="route('admin.audit-oversight')" :active="request()->routeIs('admin.audit-oversight')">
                             {{ __('Audit Oversight') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.analytics')" :active="request()->routeIs('admin.analytics')">
+                            {{ __('Analytics') }}
+                        </x-nav-link>
+                    @elseif(Auth::user()->isReceptionist())
+                        <x-nav-link :href="route('receptionist.dashboard')" :active="request()->routeIs('receptionist.dashboard')">
+                            {{ __('Today') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('receptionist.walk-in')" :active="request()->routeIs('receptionist.walk-in')">
+                            {{ __('Walk-in') }}
+                        </x-nav-link>
+                    @elseif(Auth::user()->isLabAssistant())
+                        <x-nav-link :href="route('lab.dashboard')" :active="request()->routeIs('lab.dashboard')">
+                            {{ __('Dashboard') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('lab.reports.index')" :active="request()->routeIs('lab.reports.*')">
+                            {{ __('Pending Reports') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('lab.history')" :active="request()->routeIs('lab.history')">
+                            {{ __('Upload History') }}
+                        </x-nav-link>
                     @else
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
@@ -63,10 +96,10 @@
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="hidden shrink-0 sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                        <button class="inline-flex items-center whitespace-nowrap px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
                             <div>{{ Auth::user()->name }}</div>
 
                             <div class="ms-1">
@@ -115,8 +148,14 @@
                 <x-responsive-nav-link :href="route('patient.dashboard')" :active="request()->routeIs('patient.dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('patient.appointments.index')" :active="request()->routeIs('patient.appointments.*')">
+                    {{ __('Appointments') }}
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('patient.timeline')" :active="request()->routeIs('patient.timeline')">
                     {{ __('Medical Timeline') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
+                    {{ __('Notifications') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('patient.consent-center')" :active="request()->routeIs('patient.consent-center')">
                     {{ __('Consent Center') }}
@@ -137,6 +176,12 @@
                 <x-responsive-nav-link :href="route('doctor.pending-reviews')" :active="request()->routeIs('doctor.pending-reviews')">
                     {{ __('Pending Reviews') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('doctor.assistance.index')" :active="request()->routeIs('doctor.assistance.*')">
+                    {{ __('Assistance') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
+                    {{ __('Notifications') }}
+                </x-responsive-nav-link>
             @elseif(Auth::user()->isAdmin())
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     {{ __('Dashboard') }}
@@ -152,6 +197,26 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.audit-oversight')" :active="request()->routeIs('admin.audit-oversight')">
                     {{ __('Audit Oversight') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.analytics')" :active="request()->routeIs('admin.analytics')">
+                    {{ __('Analytics') }}
+                </x-responsive-nav-link>
+            @elseif(Auth::user()->isReceptionist())
+                <x-responsive-nav-link :href="route('receptionist.dashboard')" :active="request()->routeIs('receptionist.dashboard')">
+                    {{ __('Today') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('receptionist.walk-in')" :active="request()->routeIs('receptionist.walk-in')">
+                    {{ __('Walk-in') }}
+                </x-responsive-nav-link>
+            @elseif(Auth::user()->isLabAssistant())
+                <x-responsive-nav-link :href="route('lab.dashboard')" :active="request()->routeIs('lab.dashboard')">
+                    {{ __('Dashboard') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('lab.reports.index')" :active="request()->routeIs('lab.reports.*')">
+                    {{ __('Pending Reports') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('lab.history')" :active="request()->routeIs('lab.history')">
+                    {{ __('Upload History') }}
                 </x-responsive-nav-link>
             @else
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">

@@ -63,7 +63,7 @@
                                         </span>
                                         <span class="text-xs text-slate-400">&bull;</span>
                                         <span class="text-xs font-medium text-slate-500">
-                                            Dr. {{ $item->doctor_name }}
+                                            <x-doctor-name :name="$item->doctor_name" />
                                         </span>
                                     </div>
                                     <time class="text-xs font-medium text-slate-400">
@@ -97,10 +97,12 @@
                                 @else
                                     <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
                                         <p class="text-xs font-medium text-slate-600">{{ $item->detail }}</p>
-                                        <a href="{{ route('patient.lab-reports.show', $item->id) }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-800">
+                                        @if($item->has_file)
+                                        <a href="{{ route('patient.lab-reports.open', $item->id) }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-800">
                                             <span>View Report File</span>
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                         </a>
+                                        @endif
                                     </div>
                                 @endif
                             </div>

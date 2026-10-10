@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\AssistanceRequest;
 use App\Models\ConsentToken;
 use App\Models\LabReport;
 use App\Models\LiveQueue;
@@ -10,8 +11,11 @@ use App\Models\Prescription;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\ConsentService;
+use App\Services\NotificationService;
+use App\Services\QueueService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -20,6 +24,8 @@ class DoctorPortalController extends Controller
     public function __construct(
         protected ConsentService $consentService,
         protected AuditService $auditService,
+        protected NotificationService $notificationService,
+        protected QueueService $queueService,
     ) {}
 
     /**
@@ -44,6 +50,7 @@ class DoctorPortalController extends Controller
 
         $pendingReportReviews = LabReport::where('doctor_id', $doctor->id)
             ->where('review_status', 'pending')
+            ->where('upload_status', 'uploaded')
             ->count();
 
         // Recent appointments
@@ -108,7 +115,7 @@ class DoctorPortalController extends Controller
     {
         $doctor = $request->user();
 
-        if (! $patient->isPatient()) {
+        if (! $patient->isPatient() || ! $this->doctorIsLinkedTo($doctor, $patient)) {
             abort(Response::HTTP_NOT_FOUND, 'Patient not found.');
         }
 
@@ -156,6 +163,7 @@ class DoctorPortalController extends Controller
                     resourceType: 'lab_report',
                     resourceId: $report->id,
                     consentTokenId: $token->id,
+                    ipAddress: $request->ip(),
                 );
             }
         }
@@ -170,6 +178,7 @@ class DoctorPortalController extends Controller
                     resourceType: 'prescription',
                     resourceId: $prescription->id,
                     consentTokenId: $token->id,
+                    ipAddress: $request->ip(),
                 );
             }
         }
@@ -192,6 +201,8 @@ class DoctorPortalController extends Controller
 
         $reports = LabReport::where('doctor_id', $doctor->id)
             ->where('review_status', 'pending')
+            ->where('upload_status', 'uploaded')
+            ->whereNotNull('file_path')
             ->with(['patient.patientProfile'])
             ->latest('uploaded_at')
             ->paginate(15);
@@ -279,6 +290,8 @@ class DoctorPortalController extends Controller
         // Mark appointment as completed
         $appointment->update([
             'status' => 'completed',
+            'consultation_ended_at' => $appointment->consultation_ended_at ?? now(),
+            'consultation_started_at' => $appointment->consultation_started_at ?? now(),
         ]);
 
         // Mark any pending lab reports for this patient & doctor as reviewed
@@ -294,6 +307,182 @@ class DoctorPortalController extends Controller
             $doctor->doctorProfile->increment('patients_seen_count');
         }
 
+        $patient = User::query()->find($appointment->patient_id);
+        if ($patient !== null) {
+            $this->notificationService->alert(
+                $patient,
+                'New prescription',
+                'Dr. '.$doctor->name.' issued a prescription for your visit.',
+                route('patient.timeline'),
+            );
+        }
+
         return redirect()->route('doctor.dashboard')->with('success', 'Prescription successfully created and appointment completed.');
+    }
+
+    /**
+     * Assistance requests assigned to this doctor.
+     */
+    public function assistance(Request $request): View
+    {
+        $requests = AssistanceRequest::query()
+            ->where('doctor_id', $request->user()->id)
+            ->with('patient')
+            ->latest()
+            ->paginate(15);
+
+        return view('doctor.assistance', compact('requests'));
+    }
+
+    /**
+     * Respond to an assistance request assigned to this doctor.
+     */
+    public function respondToAssistance(Request $request, AssistanceRequest $assistanceRequest): RedirectResponse
+    {
+        if ((int) $assistanceRequest->doctor_id !== (int) $request->user()->id) {
+            abort(Response::HTTP_FORBIDDEN, 'This request is not assigned to you.');
+        }
+
+        $validated = $request->validate([
+            'response' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $assistanceRequest->update([
+            'response' => $validated['response'],
+            'status' => 'resolved',
+            'responded_at' => now(),
+        ]);
+
+        $patient = $assistanceRequest->patient;
+        if ($patient !== null) {
+            $this->notificationService->alert(
+                $patient,
+                'Your doctor responded',
+                'A response was added to your assistance request. This is not an emergency service.',
+                route('patient.dashboard'),
+            );
+        }
+
+        return redirect()->route('doctor.assistance.index')
+            ->with('success', 'Response sent to the patient.');
+    }
+
+    /**
+     * Create a laboratory upload task. The lab assistant later attaches the file.
+     */
+    public function reviewReport(Request $request, LabReport $labReport): RedirectResponse
+    {
+        $doctor = $request->user();
+
+        if ((int) $labReport->doctor_id !== (int) $doctor->id) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        if ($labReport->file_path === null || $labReport->upload_status !== 'uploaded') {
+            abort(Response::HTTP_NOT_FOUND);
+        }
+
+        $validated = $request->validate([
+            'clinical_outcome' => ['required', 'in:routine_follow_up,needs_attention,urgent_clinical_review,physical_consultation'],
+            'review_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $labReport->update([
+            'review_status' => 'reviewed',
+            'clinical_outcome' => $validated['clinical_outcome'],
+            'review_note' => $validated['review_note'] ?? null,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->auditService->log(
+            actorId: (int) $doctor->id,
+            patientId: (int) $labReport->patient_id,
+            resourceType: 'lab_report',
+            resourceId: $labReport->id,
+            ipAddress: $request->ip(),
+        );
+
+        $patient = User::query()->find($labReport->patient_id);
+        $level = in_array($validated['clinical_outcome'], ['urgent_clinical_review', 'physical_consultation'], true) ? 'urgent' : ($validated['clinical_outcome'] === 'needs_attention' ? 'warning' : 'info');
+        $body = match ($validated['clinical_outcome']) {
+            'physical_consultation' => 'Your doctor has requested an in-person follow-up.',
+            'urgent_clinical_review' => 'Your doctor has requested clinical follow-up for a laboratory report.',
+            'needs_attention' => 'Your doctor marked a laboratory report as needing attention.',
+            default => 'Your laboratory report has been reviewed.',
+        };
+
+        if ($patient !== null) {
+            $this->notificationService->alert($patient, 'Laboratory report reviewed', $body, route('patient.timeline'), $level);
+        }
+
+        return back()->with('success', 'Review recorded. The clinical decision stays with you.');
+    }
+
+    public function markNoShow(Request $request, Appointment $appointment): RedirectResponse
+    {
+        if ((int) $appointment->doctor_id !== (int) $request->user()->id) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $this->queueService->markNoShow($appointment, $request->user());
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors());
+        }
+
+        return back()->with('success', 'Appointment marked as a no-show.');
+    }
+
+    public function orderLabTest(Request $request, User $patient): RedirectResponse
+    {
+        $doctor = $request->user();
+
+        if (! $patient->isPatient() || ! $this->doctorIsLinkedTo($doctor, $patient)) {
+            abort(Response::HTTP_NOT_FOUND);
+        }
+
+        $validated = $request->validate([
+            'test_name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $report = LabReport::create([
+            'patient_id' => $patient->id,
+            'doctor_id' => $doctor->id,
+            'report_title' => $validated['test_name'],
+            'file_path' => null,
+            'review_status' => 'pending',
+            'upload_status' => 'pending_upload',
+            'uploaded_at' => null,
+        ]);
+
+        $report->refresh();
+
+        $this->notificationService->alert(
+            $patient,
+            'Laboratory test ordered',
+            'Present report reference '.$report->reference.' at the laboratory.',
+            route('patient.timeline'),
+        );
+
+        return back()->with('success', 'Lab order '.$report->reference.' created. Give this reference to the laboratory.');
+    }
+
+    /**
+     * A doctor may open a chart only when an appointment, assigned report, or consent token links them.
+     */
+    private function doctorIsLinkedTo(User $doctor, User $patient): bool
+    {
+        return Appointment::query()
+            ->where('doctor_id', $doctor->id)
+            ->where('patient_id', $patient->id)
+            ->exists()
+            || LabReport::query()
+                ->where('doctor_id', $doctor->id)
+                ->where('patient_id', $patient->id)
+                ->exists()
+            || ConsentToken::query()
+                ->where('grantee_id', $doctor->id)
+                ->where('patient_id', $patient->id)
+                ->exists();
     }
 }

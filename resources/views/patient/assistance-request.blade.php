@@ -44,7 +44,7 @@
                             <option value="">General Medical Staff / Triage</option>
                             @foreach($doctors as $doctor)
                                 <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
-                                    Dr. {{ $doctor->name }} ({{ $doctor->doctorProfile?->specialty ?? 'General Practitioner' }})
+                                    <x-doctor-name :name="$doctor->name" /> ({{ $doctor->doctorProfile?->specialty ?? 'General Practitioner' }})
                                 </option>
                             @endforeach
                         </select>

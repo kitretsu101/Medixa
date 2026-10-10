@@ -5,7 +5,7 @@
                 <h2 class="font-bold text-2xl text-gray-900 leading-tight">
                     Doctor Workspace & Clinical Console
                 </h2>
-                <p class="text-sm text-gray-500 mt-1">Welcome back, Dr. {{ Auth::user()->name }}</p>
+                <p class="text-sm text-gray-500 mt-1">Welcome back, <x-doctor-name :name="Auth::user()->name" /></p>
             </div>
             <div class="flex items-center gap-3">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
@@ -35,7 +35,7 @@
                     <div class="space-y-1">
                         <div class="flex items-center gap-2.5">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                <span class="w-2 h-2 mr-1.5 bg-indigo-500 rounded-full animate-pulse"></span> Live WebSocket Broadcasting
+                                <span class="w-2 h-2 mr-1.5 bg-indigo-500 rounded-full animate-pulse"></span> Live chamber queue
                             </span>
                             <span id="queue-status-toast" class="text-xs font-medium text-emerald-600 transition-opacity opacity-0"></span>
                         </div>
@@ -72,6 +72,15 @@
                         </div>
                     </div>
                 </div>
+                <form id="delay-form" class="mt-4 flex flex-wrap items-end gap-3" onsubmit="event.preventDefault(); postQueueAction('{{ route('doctor.queue.delay') }}', { minutes: document.getElementById('delay-minutes').value });">
+                    <div>
+                        <label for="delay-minutes" class="block text-xs font-semibold text-gray-500 mb-1">Delay in minutes</label>
+                        <input id="delay-minutes" type="number" min="0" max="180" value="{{ (int) ($liveQueue->delay_minutes ?? 0) }}" class="w-28 rounded-lg border-gray-300 text-sm">
+                    </div>
+                    <button type="submit" class="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold">Save delay</button>
+                    <button type="button" class="px-3 py-2 rounded-lg border border-gray-300 text-xs font-semibold" onclick="postQueueAction('{{ route('doctor.queue.pause') }}')">Pause or resume</button>
+                    <p class="text-xs text-gray-500">{{ $liveQueue->session_status ?? 'not_started' }}@if(($liveQueue->delay_minutes ?? 0) > 0) · delayed {{ $liveQueue->delay_minutes }} min @endif</p>
+                </form>
             </div>
 
             <!-- Workload Stats Grid -->
@@ -165,10 +174,6 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="font-semibold text-gray-900">{{ $appointment->patient?->name }}</div>
-                                            <div class="text-xs text-gray-500">
-                                                Blood: {{ $appointment->patient?->patientProfile?->blood_group ?? 'N/A' }} |
-                                                Contact: {{ $appointment->patient?->patientProfile?->emergency_contact ?? $appointment->patient?->email }}
-                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-gray-600">
                                             {{ $appointment->appointment_date ? $appointment->appointment_date->format('M d, Y') : 'N/A' }}
@@ -224,7 +229,7 @@
             setTimeout(() => toast.classList.add('opacity-0'), 3000);
         }
 
-        async function postQueueAction(url) {
+        async function postQueueAction(url, payload = {}) {
             try {
                 const response = await fetch(url, {
                     method: 'POST',
@@ -232,7 +237,8 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {

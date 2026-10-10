@@ -94,6 +94,7 @@ class EnsureConsent
             resourceType: $resourceType,
             resourceId: $resource->id,
             consentTokenId: $token->id,
+            ipAddress: $request->ip(),
         );
 
         return $next($request);

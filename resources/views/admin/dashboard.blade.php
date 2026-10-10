@@ -66,7 +66,7 @@
             </div>
 
             <!-- Quick Navigation -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
                 <a href="{{ route('admin.departments.index') }}" class="group block p-6 bg-gradient-to-br from-indigo-900 to-indigo-700 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5">
                     <h4 class="text-lg font-bold mb-1">Departments</h4>
                     <p class="text-xs text-indigo-200">Manage hospital departments</p>
@@ -78,6 +78,10 @@
                 <a href="{{ route('admin.schedule') }}" class="group block p-6 bg-gradient-to-br from-amber-900 to-amber-700 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5">
                     <h4 class="text-lg font-bold mb-1">Schedule</h4>
                     <p class="text-xs text-amber-200">View doctor schedules & queues</p>
+                </a>
+                <a href="{{ route('admin.analytics') }}" class="group block p-6 bg-gradient-to-br from-sky-900 to-sky-700 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5">
+                    <h4 class="text-lg font-bold mb-1">Analytics</h4>
+                    <p class="text-xs text-sky-200">Waits, load, and queue comparison</p>
                 </a>
                 <a href="{{ route('admin.audit-oversight') }}" class="group block p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5">
                     <h4 class="text-lg font-bold mb-1">Audit Oversight</h4>

@@ -24,6 +24,7 @@ class LabReportFactory extends Factory
             'report_title' => fake()->sentence(3),
             'file_path' => 'reports/'.fake()->uuid().'.pdf',
             'review_status' => 'pending',
+            'upload_status' => 'uploaded',
             'uploaded_at' => now(),
         ];
     }

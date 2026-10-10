@@ -11,6 +11,76 @@ Medixa is an enterprise-grade Outpatient Department (OPD) hospital management sy
 
 ---
 
+## Project structure
+
+Medixa is one Laravel app. Each portal is a controller, a set of Blade pages, and a route group. Shared rules live in services, not in the pages.
+
+```text
+app/Http/Controllers/     patient, doctor, admin, lab, reception, public
+app/Http/Middleware/      role check and consent check
+app/Services/             booking, queue ranking, notifications, analytics
+app/Models/               appointments, live queue, lab reports, prescriptions
+resources/views/          one folder per portal
+routes/web.php            routes grouped by role
+storage/app/private/      lab files
+docs/                     overview, architecture, queue algorithm, API
+tests/                    feature and unit tests
+```
+
+The queue brain is `QueueOptimizationService` (who is next, and how long the wait is) and `QueueService` (the locked update and the event log). Booking is `AppointmentService`.
+
+| Folder | What lives there |
+| --- | --- |
+| `app/Http/Controllers/PatientPortalController.php` | Patient chart, booking, check-in, timeline, feedback |
+| `app/Http/Controllers/DoctorPortalController.php` | Queue-linked patients, prescriptions, lab review |
+| `app/Http/Controllers/LiveQueueController.php` | Call next, delay, pause, presence |
+| `app/Http/Controllers/LabAssistantController.php` | Report reference lookup and upload only |
+| `app/Http/Controllers/ReceptionistController.php` | Today's desk and walk-ins |
+| `app/Http/Controllers/AdminController.php` | Departments, doctors, analytics, audit counts |
+| `app/Services/QueueOptimizationService.php` | Priority score, wait estimate, FIFO vs priority simulation |
+| `app/Services/QueueService.php` | Locked queue updates and queue events |
+| `app/Services/AppointmentService.php` | Daily cap, emergency buffer, no double booking |
+| `app/Services/OpdAnalyticsService.php` | Measured waits, load, no-show rate, feedback |
+| `resources/views/patient/` | Phone-oriented patient pages, including the live serial |
+| `resources/views/doctor/` `admin/` `lab/` `receptionist/` | The other portals |
+
+## How a visit works
+
+1. The patient books online, or reception books a walk-in. The server assigns the next serial under a lock. Routine booking stops at 18. Two of the 20 daily slots stay open for emergencies.
+2. On the day, check-in changes the visit from booked to waiting. A booking alone does not put someone in the live queue.
+3. Call Next ranks checked-in patients. Emergency is always first. Senior, follow-up, and normal then compete, and a long wait adds points so a normal patient is not stuck forever.
+4. The patient sees their serial, how many people are ahead, an estimated wait, and a suggested arrival time. The wait is people ahead times the doctor's average consultation. Until five completed visits exist, that average is a stated 12 minutes. A delay appears only if the doctor typed the minutes.
+5. The doctor can order a lab test. The lab assistant uploads by the report reference and does not see the chart. The doctor records the outcome. The patient gets a link, not the file.
+
+Queue changes are saved in `queue_events` with a short reason, then `QueueUpdated` is broadcast. The patient page also polls every few seconds, so the serial still moves if WebSockets are off.
+
+## Comparison with the base paper
+
+The paper *A Review on Smart Healthcare Integration System for Optimizing OPD Queues* describes priority queues, waiting-time estimates, schedules, dashboards, a chatbot, notifications, and a receptionist, and mentions billing and inventory as future work.
+
+| Paper | Medixa |
+| --- | --- |
+| Emergency, senior, normal | Those, plus follow-up. Aging lets a long-waiting normal patient pass a newly arrived senior. Emergency cannot be overtaken. |
+| Estimated wait | Calculated. Thin history uses a labeled 12-minute baseline. |
+| Scheduling | Daily cap, emergency buffer, and a lock against double booking. Check-in is separate from booking. |
+| Doctor delay | The doctor enters the minutes. The screen does not invent them. |
+| Analytics | Real counts for volume, no-shows, and workload. The FIFO vs priority table is computed on a fixed sample and labeled as a simulation. |
+| Chatbot | Booking and navigation help. It does not diagnose or mark a report urgent. |
+| Receptionist | Today's queue, walk-in, check-in. No prescriptions and no lab files. |
+| Billing and inventory | Not built. |
+
+Medixa also adds consent before a doctor opens a record, an audit log, private lab storage, a lab assistant who can only upload, doctor-recorded review outcomes, and patient feedback shown only as averages.
+
+## Features
+
+- **Patient:** book, check in, live serial and wait estimate, timeline, prescriptions, own lab reports, assistance requests, feedback.
+- **Doctor:** call next, delay, pause, linked charts, prescriptions, lab orders, review outcome.
+- **Admin:** departments, doctors, schedule, audit counts, OPD analytics.
+- **Lab assistant:** find a report by `LAB-…` or `PAT-…`, upload PDF or image, see own upload history.
+- **Reception:** today's queue, check-in, walk-in including emergency.
+
+---
+
 ## Local Setup Steps
 
 Follow these steps to configure and run Medixa in your local development environment:
@@ -111,6 +181,8 @@ All pre-seeded demo accounts share the password: `password`
 | **Patient** | Rahima Khatun | `rahima.khatun@patient.test` | Medical timeline, consent center (token revoke), lab report upload, 2-min signed downloads |
 | **Patient** | Mahbub Alam | `mahbub.alam@patient.test` | OPD assistance requests, health profile, consultation records |
 | **Patient** | Shirin Sultana | `shirin.sultana@patient.test` | Medical timeline, consent token review |
+| **Lab assistant** | Lab Assistant | `lab.assistant@medixa.test` | Report upload only. No patient chart |
+| **Reception** | OPD Reception | `reception@medixa.test` | Today's queue, walk-in tokens, check-in. No charts or prescriptions |
 
 ---
 
@@ -120,13 +192,24 @@ All pre-seeded demo accounts share the password: `password`
    - `/patient/*` routes protected by `auth` and `role:patient`.
    - `/doctor/*` routes protected by `auth` and `role:doctor`.
    - `/admin/*` routes protected by `auth` and `role:admin`.
+   - `/lab-assistant/*` routes protected by `auth` and `role:lab_assistant`.
+   - `/receptionist/*` routes protected by `auth` and `role:receptionist`.
 2. **Consent Interception (`EnsureConsent`)**:
    - Medical routes such as `/lab-reports/{labReport}` validate active patient-issued tokens; unauthorized doctors or admins are blocked with `403 Forbidden`.
    - Patients bypass checks on their own records.
 3. **Signed Temporary URLs**:
    - Lab reports are never published to public storage disks. Downloads are served through short-lived signed URLs (`URL::signedRoute(..., now()->addMinutes(2))`) protected by Laravel's `signed` middleware.
 4. **Data-at-Rest Field Encryption**:
-   - Sensitive personal information (`nid`, `phone`, `emergency_contact`) and doctor consultation `instructions`/`notes` are cast as `encrypted` on their Eloquent models using Laravel's native AES-256 encryption.
+   - Patient `phone`, `nid`, and `emergency_contact` are stored as encrypted text. Prescription `instructions` are encrypted. The patient dashboard also polls the queue every 8 seconds when Reverb is not running.
+5. **Lab downloads**:
+   - Files live on the private disk. A download requires a valid signature and either ownership or an unexpired, unrevoked consent token. Any logged-in doctor does not get access just by being a doctor.
 5. **Rate Limiting**:
    - `POST /login`: `throttle:5,1` (prevents brute-force credential stuffing).
    - `POST /chatbot/message`: `throttle:30,1` (protects AI triage endpoint against abuse).
+   - `POST /patient/appointments`: `throttle:10,1`.
+
+---
+
+## Further notes
+
+Longer notes are in `docs/project-overview.md`, `docs/architecture.md`, `docs/queue-algorithm.md`, and `docs/api.md`.

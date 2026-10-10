@@ -30,67 +30,7 @@
                 </div>
             @endif
 
-            <!-- Real-Time OPD Queue Tracker -->
-            @if($activeAppointment && $activeAppointment->doctor)
-                @php
-                    $doctorQueue = $activeAppointment->doctor->liveQueue;
-                    $isDoctorPresent = (bool) ($doctorQueue?->doctor_present_status ?? false);
-                    $currentSerial = (int) ($doctorQueue?->current_running_serial ?? 0);
-                    $patientSerial = (int) $activeAppointment->serial_number;
-                @endphp
-                <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl border border-indigo-900/50 relative overflow-hidden">
-                    <div class="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
-                        <div class="space-y-2">
-                            <div class="flex items-center gap-3">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                    <span class="w-2 h-2 mr-2 bg-emerald-400 rounded-full animate-ping"></span> Live Echo WebSocket Sync
-                                </span>
-                                <span id="queue-presence-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ $isDoctorPresent ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20' }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $isDoctorPresent ? 'bg-emerald-400' : 'bg-amber-400' }}"></span>
-                                    <span>{{ $isDoctorPresent ? 'In Chamber' : 'Doctor Away' }}</span>
-                                </span>
-                            </div>
-
-                            <h3 class="text-xl md:text-2xl font-black tracking-tight text-white">
-                                OPD Chamber Live Tracker
-                            </h3>
-                            <p class="text-sm text-slate-300">
-                                Assigned to <span class="font-semibold text-white">Dr. {{ $activeAppointment->doctor->name }}</span>
-                                <span class="text-slate-400">({{ $activeAppointment->doctor->doctorProfile?->department?->name ?? 'OPD Specialist' }})</span>
-                            </p>
-
-                            <!-- Primary Live Queue Status String -->
-                            <div class="mt-4 pt-3 border-t border-white/10 flex items-center">
-                                <div class="font-mono text-base sm:text-lg font-bold text-indigo-200 tracking-wide bg-black/30 px-4 py-2 rounded-xl border border-white/10 shadow-inner">
-                                    <span id="queue-doctor-status">Doctor {{ $isDoctorPresent ? 'Present' : 'Away' }}</span> | Current Serial: <span id="queue-current-serial" class="text-emerald-400">#{{ $currentSerial }}</span> | Your Serial: <span id="queue-patient-serial" class="text-amber-300">#{{ $patientSerial }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Turn Countdown / Visual Callout -->
-                        <div class="bg-white/5 border border-white/10 rounded-2xl p-5 text-center min-w-[240px]">
-                            <span class="text-xs uppercase tracking-widest text-slate-400 font-semibold block mb-1">Queue Status</span>
-                            <div id="queue-turn-message" class="text-sm font-medium">
-                                @if($currentSerial === 0)
-                                    <span class="text-slate-300">Consultation session starting shortly.</span>
-                                @elseif($currentSerial === $patientSerial)
-                                    <span class="text-emerald-400 font-bold animate-pulse">Your turn now! Please enter room.</span>
-                                @elseif($currentSerial < $patientSerial)
-                                    <span class="text-indigo-200"><strong class="text-white font-bold">{{ $patientSerial - $currentSerial }}</strong> patient(s) ahead of you.</span>
-                                @else
-                                    <span class="text-slate-400">Your serial has been called.</span>
-                                @endif
-                            </div>
-                            <div class="mt-3 flex justify-center gap-4 text-xs font-mono text-slate-400">
-                                <div>Serial: <span class="text-white font-bold">#{{ $patientSerial }}</span></div>
-                                <div>Date: <span class="text-white font-bold">{{ $activeAppointment->appointment_date ? $activeAppointment->appointment_date->format('M d') : 'Today' }}</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
+            @include('patient.partials.live-serial')
 
             <!-- Quick Stats Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -206,7 +146,7 @@
                             <div class="py-3.5 flex items-start justify-between gap-4">
                                 <div>
                                     <h5 class="text-sm font-semibold text-slate-900">{{ $prescription->diagnosis }}</h5>
-                                    <p class="text-xs text-slate-500 mt-0.5">Prescribed by Dr. {{ $prescription->doctor?->name ?? 'Unknown' }}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Prescribed by <x-doctor-name :name="$prescription->doctor?->name ?? 'Unknown'" /></p>
                                 </div>
                                 <span class="text-xs font-medium text-slate-400 shrink-0">
                                     {{ $prescription->created_at->format('M d, Y') }}
@@ -235,7 +175,7 @@
                             <div class="py-3.5 flex items-center justify-between gap-4">
                                 <div>
                                     <h5 class="text-sm font-semibold text-slate-900">{{ $report->report_title }}</h5>
-                                    <p class="text-xs text-slate-500 mt-0.5">Assigned to Dr. {{ $report->doctor?->name ?? 'None' }}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Assigned to <x-doctor-name :name="$report->doctor?->name ?? 'None'" /></p>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <span class="px-2 py-0.5 text-xs font-medium rounded-full {{ $report->review_status === 'reviewed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
@@ -255,76 +195,4 @@
             </div>
         </div>
     </div>
-
-    @if($activeAppointment && $activeAppointment->doctor)
-    @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const doctorId = {{ $activeAppointment->doctor_id }};
-            const patientSerial = {{ (int) $activeAppointment->serial_number }};
-
-            function setupEchoListener() {
-                if (!window.Echo) {
-                    setTimeout(setupEchoListener, 150);
-                    return;
-                }
-
-                console.log(`Subscribing to queue.doctor.${doctorId}`);
-
-                window.Echo.channel(`queue.doctor.${doctorId}`)
-                    .listen('.queue.updated', (event) => {
-                        console.log('Real-time QueueUpdated received:', event);
-
-                        const currentSerial = Number(event.current_serial ?? 0);
-                        const isPresent = Boolean(event.doctor_present);
-
-                        // 1. Update primary status string: "Doctor Present | Current Serial: #14 | Your Serial: #22"
-                        const doctorStatusEl = document.getElementById('queue-doctor-status');
-                        const currentSerialEl = document.getElementById('queue-current-serial');
-                        const patientSerialEl = document.getElementById('queue-patient-serial');
-
-                        if (doctorStatusEl) {
-                            doctorStatusEl.textContent = isPresent ? 'Doctor Present' : 'Doctor Away';
-                        }
-                        if (currentSerialEl) {
-                            currentSerialEl.textContent = '#' + currentSerial;
-                        }
-                        if (patientSerialEl) {
-                            patientSerialEl.textContent = '#' + patientSerial;
-                        }
-
-                        // 2. Update Chamber Presence badge
-                        const presenceBadge = document.getElementById('queue-presence-badge');
-                        if (presenceBadge) {
-                            if (isPresent) {
-                                presenceBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-                                presenceBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>In Chamber</span>';
-                            } else {
-                                presenceBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20';
-                                presenceBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span>Doctor Away</span>';
-                            }
-                        }
-
-                        // 3. Update Turn message
-                        const turnMessageEl = document.getElementById('queue-turn-message');
-                        if (turnMessageEl) {
-                            if (currentSerial === 0) {
-                                turnMessageEl.innerHTML = '<span class="text-slate-300">Consultation session starting shortly.</span>';
-                            } else if (currentSerial === patientSerial) {
-                                turnMessageEl.innerHTML = '<span class="text-emerald-400 font-bold animate-pulse">🎉 Your turn now! Please enter room.</span>';
-                            } else if (currentSerial < patientSerial) {
-                                const diff = patientSerial - currentSerial;
-                                turnMessageEl.innerHTML = `<span class="text-indigo-200"><strong class="text-white font-bold">${diff}</strong> patient(s) ahead of you.</span>`;
-                            } else {
-                                turnMessageEl.innerHTML = '<span class="text-slate-400">Your serial has been called.</span>';
-                            }
-                        }
-                    });
-            }
-
-            setupEchoListener();
-        });
-    </script>
-    @endpush
-    @endif
 </x-app-layout>

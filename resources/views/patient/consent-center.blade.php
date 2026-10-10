@@ -60,7 +60,7 @@
                                 @foreach($tokens as $token)
                                     <tr class="hover:bg-slate-50/50 transition">
                                         <td class="py-4 px-6">
-                                            <div class="font-semibold text-slate-900">Dr. {{ $token->grantee?->name ?? 'Unknown' }}</div>
+                                            <div class="font-semibold text-slate-900"><x-doctor-name :name="$token->grantee?->name ?? 'Unknown'" /></div>
                                             <div class="text-xs text-slate-400 font-mono">{{ $token->grantee?->email ?? '' }}</div>
                                         </td>
                                         <td class="py-4 px-6">

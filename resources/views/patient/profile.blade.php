@@ -13,6 +13,8 @@
     <div class="py-8">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
+            @include('patient.partials.live-serial')
+
             @if(session('status'))
                 <div class="rounded-xl bg-teal-50 border border-teal-200 p-4 flex items-center gap-3 text-teal-800 text-sm shadow-sm">
                     <svg class="w-5 h-5 text-teal-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
@@ -75,6 +77,22 @@
                                 <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                             @enderror
                         </div>
+                    </div>
+
+                    <div>
+                        <label for="phone" class="block text-sm font-semibold text-slate-700 mb-1">Phone</label>
+                        <input type="text" id="phone" name="phone" value="{{ old('phone', $profile->phone) }}" class="w-full rounded-xl border-slate-300 focus:border-teal-500 focus:ring-teal-500 text-sm">
+                        @error('phone')
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="nid" class="block text-sm font-semibold text-slate-700 mb-1">National ID</label>
+                        <input type="text" id="nid" name="nid" value="{{ old('nid', $profile->nid) }}" class="w-full rounded-xl border-slate-300 focus:border-teal-500 focus:ring-teal-500 text-sm">
+                        @error('nid')
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Emergency Contact -->

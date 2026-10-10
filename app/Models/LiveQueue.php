@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['doctor_id', 'current_running_serial', 'doctor_present_status'])]
+#[Fillable(['doctor_id', 'current_running_serial', 'doctor_present_status', 'session_status', 'delay_minutes'])]
 class LiveQueue extends Model
 {
     /** Only updated_at — no created_at column. */

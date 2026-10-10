@@ -16,7 +16,7 @@ class QueueUpdated implements ShouldBroadcast
     /**
      * Payload carried on the broadcast — no patient data included.
      *
-     * @var array{doctor_id: int, current_serial: int, doctor_present: bool, doctor_name: string, updated_at: string}
+     * @var array{doctor_id: int, current_serial: int, doctor_present: bool, doctor_name: string, session_status: string, delay_minutes: int, updated_at: string}
      */
     public array $payload;
 
@@ -30,6 +30,8 @@ class QueueUpdated implements ShouldBroadcast
             'current_serial' => $liveQueue->current_running_serial,
             'doctor_present' => (bool) $liveQueue->doctor_present_status,
             'doctor_name' => $liveQueue->doctor?->name ?? 'Doctor',
+            'session_status' => (string) ($liveQueue->session_status ?? 'not_started'),
+            'delay_minutes' => (int) ($liveQueue->delay_minutes ?? 0),
             'updated_at' => $liveQueue->updated_at?->toIso8601String() ?? now()->toIso8601String(),
         ];
     }

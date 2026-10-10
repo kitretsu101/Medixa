@@ -45,6 +45,26 @@ class MedixaSeeder extends Seeder
             ]
         );
 
+        User::firstOrCreate(
+            ['email' => 'reception@medixa.test'],
+            [
+                'name' => 'OPD Reception',
+                'password' => Hash::make('password'),
+                'role' => 'receptionist',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'lab.assistant@medixa.test'],
+            [
+                'name' => 'Lab Assistant',
+                'password' => Hash::make('password'),
+                'role' => 'lab_assistant',
+                'email_verified_at' => now(),
+            ]
+        );
+
         // ── 2. Departments ────────────────────────────────────────────────
         $departmentsData = [
             [
@@ -159,8 +179,8 @@ class MedixaSeeder extends Seeder
             LiveQueue::firstOrCreate(
                 ['doctor_id' => $user->id],
                 [
-                    'current_token' => $d['queue_token'],
-                    'is_present' => $d['is_present'],
+                    'current_running_serial' => $d['queue_token'],
+                    'doctor_present_status' => $d['is_present'],
                 ]
             );
 
@@ -219,21 +239,38 @@ class MedixaSeeder extends Seeder
 
         foreach ($patientUsers as $idx => $patient) {
             $doctor = $doctorUsers[$idx % count($doctorUsers)];
-            $status = $statuses[$idx % count($statuses)];
-            $dateOffset = ($idx % 5) - 2; // -2 to +2 days from today
-            $apptDate = Carbon::today()->addDays($dateOffset)->toDateString();
+            $isTodayVisit = $idx === 0;
+            $status = $isTodayVisit ? 'pending' : $statuses[$idx % count($statuses)];
+            $dateOffset = ($idx % 5) - 2;
+            $apptDate = $isTodayVisit
+                ? Carbon::today()->toDateString()
+                : Carbon::today()->addDays($dateOffset)->toDateString();
 
-            $appointment = Appointment::firstOrCreate(
-                [
-                    'patient_id' => $patient->id,
-                    'doctor_id' => $doctor->id,
-                    'appointment_date' => $apptDate,
-                ],
-                [
-                    'serial_number' => ($idx % 15) + 1,
-                    'status' => $status,
-                ]
-            );
+            if ($isTodayVisit) {
+                $appointment = Appointment::updateOrCreate(
+                    [
+                        'patient_id' => $patient->id,
+                        'doctor_id' => $doctor->id,
+                    ],
+                    [
+                        'appointment_date' => $apptDate,
+                        'serial_number' => 12,
+                        'status' => 'pending',
+                    ]
+                );
+            } else {
+                $appointment = Appointment::firstOrCreate(
+                    [
+                        'patient_id' => $patient->id,
+                        'doctor_id' => $doctor->id,
+                        'appointment_date' => $apptDate,
+                    ],
+                    [
+                        'serial_number' => ($idx % 15) + 1,
+                        'status' => $status,
+                    ]
+                );
+            }
 
             $createdAppointments[] = $appointment;
         }
@@ -292,18 +329,33 @@ class MedixaSeeder extends Seeder
             }
         }
 
+        if (isset($patientUsers[0], $doctorUsers[0])) {
+            LabReport::updateOrCreate(
+                [
+                    'patient_id' => $patientUsers[0]->id,
+                    'doctor_id' => $doctorUsers[0]->id,
+                    'report_title' => 'Complete Blood Count (CBC)',
+                    'upload_status' => 'pending_upload',
+                ],
+                [
+                    'file_path' => null,
+                    'review_status' => 'pending',
+                    'uploaded_at' => null,
+                ]
+            );
+        }
+
         // ── 8. Assistance Requests ─────────────────────────────────────────
         $assistanceCategories = ['wheelchair', 'stretcher', 'nurse_escort', 'visual_guidance'];
         foreach (array_slice($patientUsers, 0, 4) as $k => $patient) {
             AssistanceRequest::firstOrCreate(
                 [
                     'patient_id' => $patient->id,
-                    'category' => $assistanceCategories[$k],
+                    'message' => 'Patient requires assistance from OPD arrival to consultation room ('.$assistanceCategories[$k].').',
                 ],
                 [
                     'doctor_id' => $doctorUsers[$k % count($doctorUsers)]->id,
-                    'notes' => 'Patient requires assistance from OPD arrival to consultation room.',
-                    'status' => $k % 2 === 0 ? 'pending' : 'completed',
+                    'status' => $k % 2 === 0 ? 'open' : 'resolved',
                 ]
             );
         }
@@ -422,7 +474,6 @@ class MedixaSeeder extends Seeder
                 'resource_id' => 1,
                 'consent_token_id' => $createdTokens[0]->id ?? null,
                 'ip_address' => '127.0.0.1',
-                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Medixa/OPD-Demo',
                 'accessed_at' => Carbon::now()->subDays($log['days_ago'])->subMinutes(rand(10, 400)),
             ]);
         }
