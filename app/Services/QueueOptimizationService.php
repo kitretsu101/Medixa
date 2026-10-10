@@ -267,8 +267,6 @@ class QueueOptimizationService
             $delayMessage = 'The queue is paused.';
         } elseif ($delay > 0) {
             $delayMessage = 'Doctor is currently delayed by approximately '.$delay.' minutes.';
-        } elseif (in_array($session, ['absent', 'not_started'], true) && ! ($queue?->doctor_present_status)) {
-            $delayMessage = null;
         }
 
         return [

@@ -191,15 +191,6 @@ class QueueService
         return $appointment;
     }
 
-    public function patientsAhead(int $currentSerial, int $patientSerial): int
-    {
-        if ($currentSerial <= 0 || $currentSerial >= $patientSerial) {
-            return 0;
-        }
-
-        return $patientSerial - $currentSerial;
-    }
-
     private function callNext(LiveQueue $queue, Appointment $next, ?int $actorId): LiveQueue
     {
         Appointment::query()
