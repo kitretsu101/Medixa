@@ -36,3 +36,57 @@ All of these require a logged-in session. JSON queue actions also expect the CSR
 | GET | `/admin/analytics` | admin | Recorded metrics plus a labeled simulation. |
 
 Other roles receive 403 on these URLs. A patient cannot check in someone else’s appointment.
+
+## Chatbot
+
+These routes use the web session and CSRF protection. They are not a separate API token. `POST /chatbot/message` accepts guests and signed-in users. `DELETE` accepts only the owner of that session id. Both are limited to 30 requests per minute. Message text is not stored.
+
+| Method | URL | Who | Notes |
+| --- | --- | --- | --- |
+| POST | `/chatbot/message` | guest or signed-in user | `message` required, at most 2000 characters. Optional `locale` of `en` or `bn`. Optional `session_token`. Optional `confirm` object, described below. |
+| DELETE | `/chatbot/sessions/{session}` | owner of that UUID | Anyone else receives 404, including an admin. A non-UUID URL is 404. |
+
+A booking confirmation is ignored unless `confirm.confirmed` is accepted (`true`, `1`, `"1"`, `"yes"`, or `"on"`). The server books only through `AppointmentService` with priority `normal`. Extra fields such as `priority_type`, `serial_number`, and `time` are not used.
+
+Example directory question:
+
+```http
+POST /chatbot/message
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {token from the page meta tag}
+
+{"message":"Which departments are open?","locale":"en"}
+```
+
+```json
+{
+  "reply": "We have the following departments: Cardiology.",
+  "session_token": "00000000-0000-4000-8000-000000000000",
+  "booking": null,
+  "error": false,
+  "retryable": false,
+  "locale": "en",
+  "sources": [],
+  "offers": []
+}
+```
+
+The session id above is a shape example, not a live id. Send it back as `session_token` on the next message from the same browser session.
+
+Example confirmation, only after the patient has chosen a visit the server offered:
+
+```json
+{
+  "message": "Confirm this routine appointment",
+  "confirm": {
+    "doctor_id": 1,
+    "appointment_date": "2026-10-20",
+    "confirmed": true
+  }
+}
+```
+
+A successful booking returns `booking.success` true, `booking.appointment_id`, and a reply that includes the server-assigned serial. A duplicate or a full day returns `booking.success` false and creates no second row. An emergency message returns `booking` null and `offers` as an empty list, even if `confirm` is present.
+
+Validation failures return 422. The 31st message in a minute returns 429. A session id the request does not own returns 404.

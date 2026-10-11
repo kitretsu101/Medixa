@@ -11,6 +11,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(MedixaSeeder::class);
+        $this->call([
+            MedixaSeeder::class,
+            MedicalKnowledgeSeeder::class,
+        ]);
     }
 }

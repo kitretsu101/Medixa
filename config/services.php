@@ -44,6 +44,8 @@ return [
         'provider' => env('AI_PROVIDER', 'openai'),
         'key' => env('AI_API_KEY', env('OPENAI_API_KEY')),
         'model' => env('AI_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini')),
+        'timeout' => env('AI_TIMEOUT', 20),
+        'connect_timeout' => env('AI_CONNECT_TIMEOUT', 5),
     ],
 
 ];

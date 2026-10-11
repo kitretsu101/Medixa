@@ -39,7 +39,7 @@ Each in-app notice has a level: info, warning, or urgent. Queue delay and pause 
 
 ## AI
 
-The chatbot can help with navigation and booking through the existing appointment service. It does not set clinical urgency, and the hospital portals keep working if the provider is down.
+The chatbot can help with navigation and booking through the existing appointment service. It does not set clinical urgency, it is not a validated triage tool, and the hospital portals keep working if the provider is down.
 
 ## Security
 

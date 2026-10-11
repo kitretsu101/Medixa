@@ -70,6 +70,9 @@
                         <x-nav-link :href="route('admin.analytics')" :active="request()->routeIs('admin.analytics')">
                             {{ __('Analytics') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.knowledge.index')" :active="request()->routeIs('admin.knowledge.*')">
+                            {{ __('Knowledge') }}
+                        </x-nav-link>
                     @elseif(Auth::user()->isReceptionist())
                         <x-nav-link :href="route('receptionist.dashboard')" :active="request()->routeIs('receptionist.dashboard')">
                             {{ __('Today') }}
@@ -200,6 +203,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.analytics')" :active="request()->routeIs('admin.analytics')">
                     {{ __('Analytics') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.knowledge.index')" :active="request()->routeIs('admin.knowledge.*')">
+                    {{ __('Knowledge') }}
                 </x-responsive-nav-link>
             @elseif(Auth::user()->isReceptionist())
                 <x-responsive-nav-link :href="route('receptionist.dashboard')" :active="request()->routeIs('receptionist.dashboard')">

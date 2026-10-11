@@ -33,6 +33,10 @@
             </main>
         </div>
 
+        @if (auth()->user()?->isPatient())
+            @include('partials.chatbot-widget')
+        @endif
+
         @stack('scripts')
     </body>
 </html>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminKnowledgeController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\DoctorPortalController;
 use App\Http\Controllers\LabAssistantController;
@@ -34,6 +35,11 @@ Route::get('/departments/{department}', [PublicController::class, 'departmentDet
 Route::post('/chatbot/message', [ChatbotController::class, 'message'])
     ->middleware('throttle:30,1')
     ->name('chatbot.message');
+
+Route::delete('/chatbot/sessions/{session}', [ChatbotController::class, 'destroy'])
+    ->middleware('throttle:30,1')
+    ->whereUuid('session')
+    ->name('chatbot.sessions.destroy');
 
 Route::middleware(['auth', 'signed', 'consent:lab_report'])
     ->get('/lab-reports/{labReport}/download', [LabReportController::class, 'download'])
@@ -192,6 +198,10 @@ Route::middleware(['auth', 'role:admin'])
         // Audit Oversight — AGGREGATE ONLY, no patient record content
         Route::get('/audit-oversight', [AdminController::class, 'auditOversight'])->name('audit-oversight');
         Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+
+        Route::get('/knowledge', [AdminKnowledgeController::class, 'index'])->name('knowledge.index');
+        Route::get('/knowledge/{article}', [AdminKnowledgeController::class, 'edit'])->name('knowledge.edit');
+        Route::put('/knowledge/{article}', [AdminKnowledgeController::class, 'update'])->name('knowledge.update');
 
         // Admin lab report access — also requires consent
         Route::middleware('consent:lab_report')

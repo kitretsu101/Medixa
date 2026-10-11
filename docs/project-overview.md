@@ -91,7 +91,7 @@ The paper reviews a smart OPD design: priority queues, waiting-time estimates, s
 | Doctor delay | The doctor enters the minutes. The patient sees that number. The system does not invent a delay. |
 | EHR and dashboards | Patient timeline, doctor chart for linked patients only, admin analytics. |
 | Predictive analytics | No-show rate and workload are counted from stored visits. The algorithm table is a live simulation on a fixed sample, not a hardcoded claim. |
-| AI chatbot | Helps with navigation and booking. It does not diagnose, prescribe, or mark a report urgent. |
+| AI chatbot | Helps with navigation and booking. It does not diagnose, prescribe, or mark a report urgent. It is not a validated clinical tool. |
 | Receptionist | Today's queue, walk-in token, check-in. No prescriptions and no lab files. |
 | Notifications | Sent on meaningful queue steps, with info, warning, and urgent. |
 | Resource management | Doctor and department load on the analytics page. There is no inventory or billing module. |
