@@ -8,11 +8,13 @@ use App\Models\ConsentToken;
 use App\Models\LabReport;
 use App\Models\LiveQueue;
 use App\Models\Prescription;
+use App\Models\TrackerInvitation;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\ConsentService;
 use App\Services\NotificationService;
 use App\Services\QueueService;
+use App\Services\Tracker\PrescriptionScheduleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -306,6 +308,19 @@ class DoctorPortalController extends Controller
         if ($doctor->doctorProfile) {
             $doctor->doctorProfile->increment('patients_seen_count');
         }
+
+        // Initialize Medicine Tracker Invitation & Schedule
+        TrackerInvitation::firstOrCreate(
+            [
+                'prescription_id' => $prescription->id,
+                'patient_id' => $appointment->patient_id,
+            ],
+            [
+                'status' => 'pending',
+            ]
+        );
+
+        app(PrescriptionScheduleService::class)->generateForPrescription($prescription);
 
         $patient = User::query()->find($appointment->patient_id);
         if ($patient !== null) {

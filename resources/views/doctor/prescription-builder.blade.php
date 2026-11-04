@@ -109,8 +109,16 @@
                                     <div class="sm:col-span-2">
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">Duration</label>
                                         <input type="text" :name="`medicines[${index}][duration]`" x-model="medicine.duration"
-                                               placeholder="e.g. 7 days"
+                                               list="duration-presets"
+                                               placeholder="e.g. 5 days, 2 months"
                                                class="w-full rounded-lg border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-200">
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            <button type="button" @click="medicine.duration = '5 days'" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 transition">5d</button>
+                                            <button type="button" @click="medicine.duration = '7 days'" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 transition">7d</button>
+                                            <button type="button" @click="medicine.duration = '1 month'" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 transition">1mo</button>
+                                            <button type="button" @click="medicine.duration = '2 months'" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 transition">2mo</button>
+                                            <button type="button" @click="medicine.duration = '3 months'" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 transition">3mo</button>
+                                        </div>
                                     </div>
                                     <div class="sm:col-span-1 flex justify-end">
                                         <button type="button" @click="removeRow(index)" :disabled="medicines.length <= 1"
@@ -123,6 +131,16 @@
                                 </div>
                             </template>
                         </div>
+                        <datalist id="duration-presets">
+                            <option value="3 days">
+                            <option value="5 days">
+                            <option value="7 days">
+                            <option value="10 days">
+                            <option value="14 days">
+                            <option value="1 month">
+                            <option value="2 months">
+                            <option value="3 months">
+                        </datalist>
                     </div>
 
                     <!-- Instructions / Advice -->

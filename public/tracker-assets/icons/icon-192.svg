@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="medixaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#168071"/>
+      <stop offset="100%" stop-color="#0f4f46"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Icon Card -->
+  <rect width="192" height="192" rx="42" fill="url(#medixaGrad)"/>
+  
+  <!-- Outer subtle glow circle -->
+  <circle cx="96" cy="96" r="66" fill="#ffffff" fill-opacity="0.08"/>
+
+  <!-- Medicine Capsule / Cross + Sprout Motif -->
+  <!-- Capsule Body Left Half -->
+  <path d="M68 96 C68 81 80 69 95 69 L95 123 C80 123 68 111 68 96 Z" fill="#ffffff"/>
+  <!-- Capsule Body Right Half -->
+  <path d="M97 69 C112 69 124 81 124 96 C124 111 112 123 97 123 Z" fill="#72d5c2"/>
+
+  <!-- Center sprout leaf rising from medicine -->
+  <path d="M96 74 C96 52 118 42 118 42 C118 42 122 64 104 74 Z" fill="url(#leafGrad)"/>
+  <path d="M96 74 C96 56 80 48 80 48 C80 48 76 68 92 74 Z" fill="#6ee7b7"/>
+
+  <!-- Small white dot inside capsule -->
+  <circle cx="83" cy="96" r="3.5" fill="#168071"/>
+  <circle cx="108" cy="96" r="3.5" fill="#ffffff"/>
+</svg>
+

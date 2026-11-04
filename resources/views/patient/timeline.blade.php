@@ -94,6 +94,14 @@
                                             </div>
                                         </div>
                                     @endif
+
+                                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                                        <span class="text-[11px] text-slate-400">{{ ($item->model?->recoveryJourney?->schedule?->duration_days ?? null) ? $item->model->recoveryJourney->schedule->duration_days . '-Day Treatment Plan' : 'Prescription Treatment Plan' }}</span>
+                                        <a href="{{ route('tracker.app') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-800 transition">
+                                            <span>Open in Medicine Tracker</span>
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                        </a>
+                                    </div>
                                 @else
                                     <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
                                         <p class="text-xs font-medium text-slate-600">{{ $item->detail }}</p>

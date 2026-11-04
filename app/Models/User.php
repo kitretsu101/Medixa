@@ -61,6 +61,24 @@ class User extends Authenticatable
         return $this->hasMany(LabReport::class, 'doctor_id');
     }
 
+    /** @return HasMany<MedicationSchedule, $this> */
+    public function medicationSchedules(): HasMany
+    {
+        return $this->hasMany(MedicationSchedule::class, 'patient_id');
+    }
+
+    /** @return HasMany<RecoveryJourney, $this> */
+    public function recoveryJourneys(): HasMany
+    {
+        return $this->hasMany(RecoveryJourney::class, 'patient_id');
+    }
+
+    /** @return HasMany<TrackerInvitation, $this> */
+    public function trackerInvitations(): HasMany
+    {
+        return $this->hasMany(TrackerInvitation::class, 'patient_id');
+    }
+
     // ─── Scopes ───────────────────────────────────────────────────────
 
     /** @param Builder<User> $query */

@@ -10,6 +10,7 @@ use App\Models\ConsentToken;
 use App\Models\LabReport;
 use App\Models\PatientProfile;
 use App\Models\Prescription;
+use App\Models\TrackerInvitation;
 use App\Models\User;
 use App\Services\AppointmentService;
 use App\Services\ConsentService;
@@ -65,6 +66,12 @@ class PatientPortalController extends Controller
         $activeAppointment = $this->upcomingVisit($userId);
         $queueEstimate = $activeAppointment ? $this->queueOptimization->snapshot($activeAppointment) : null;
 
+        $pendingTrackerInvitation = TrackerInvitation::where('patient_id', $userId)
+            ->where('status', 'pending')
+            ->with(['prescription.doctor'])
+            ->latest()
+            ->first();
+
         return view('patient.dashboard', compact(
             'prescriptionCount',
             'labReportCount',
@@ -74,6 +81,7 @@ class PatientPortalController extends Controller
             'recentLabReports',
             'activeAppointment',
             'queueEstimate',
+            'pendingTrackerInvitation',
         ));
     }
 

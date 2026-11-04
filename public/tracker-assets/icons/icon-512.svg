@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="medixaGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#168071"/>
+      <stop offset="100%" stop-color="#0d3f38"/>
+    </linearGradient>
+    <linearGradient id="leafGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <filter id="shadow512" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#072824" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#medixaGrad512)"/>
+  <circle cx="256" cy="256" r="176" fill="#ffffff" fill-opacity="0.08"/>
+
+  <!-- Capsule & Sprout with filter -->
+  <g filter="url(#shadow512)">
+    <!-- Capsule Left Half -->
+    <path d="M182 256 C182 215 214 184 254 184 L254 328 C214 328 182 297 182 256 Z" fill="#ffffff"/>
+    <!-- Capsule Right Half -->
+    <path d="M258 184 C298 184 330 215 330 256 C330 297 298 328 258 328 Z" fill="#72d5c2"/>
+
+    <!-- Center sprout leaves -->
+    <path d="M256 196 C256 138 314 112 314 112 C314 112 326 170 276 196 Z" fill="url(#leafGrad512)"/>
+    <path d="M256 196 C256 148 212 126 212 126 C212 126 202 180 246 196 Z" fill="#6ee7b7"/>
+
+    <circle cx="220" cy="256" r="9" fill="#168071"/>
+    <circle cx="292" cy="256" r="9" fill="#ffffff"/>
+  </g>
+</svg>
+

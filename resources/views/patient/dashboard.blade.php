@@ -35,6 +35,67 @@
 
             @include('patient.partials.live-serial')
 
+            <!-- Medicine Tracker Activation Invitation Popup Modal -->
+            @if(isset($pendingTrackerInvitation) && $pendingTrackerInvitation)
+                <div x-data="{ showActivationModal: true }" x-show="showActivationModal" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div x-show="showActivationModal" 
+                         x-transition:enter="ease-out duration-300" 
+                         x-transition:enter-start="opacity-0" 
+                         x-transition:enter-end="opacity-100" 
+                         x-transition:leave="ease-in duration-200" 
+                         x-transition:leave-start="opacity-100" 
+                         x-transition:leave-end="opacity-0" 
+                         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+
+                    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                            <div x-show="showActivationModal"
+                                 x-transition:enter="ease-out duration-300" 
+                                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                                 x-transition:leave="ease-in duration-200" 
+                                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                 class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-100">
+                                
+                                <div class="p-6 sm:p-8">
+                                    <div class="flex items-center justify-center w-16 h-16 mx-auto rounded-2xl bg-teal-50 border border-teal-100 text-teal-600 mb-5 shadow-inner">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        </svg>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-800 uppercase tracking-wider mb-2">
+                                            Prescription Ready
+                                        </span>
+                                        <h3 class="text-2xl font-bold font-display text-slate-900" id="modal-title">Start Your Recovery Journey!</h3>
+                                        <p class="mt-2.5 text-xs text-slate-600 leading-relaxed">
+                                            Your doctor has prescribed medication for you. Activate <strong>Medixa Medicine Tracker</strong> to receive reminders, track your daily doses, and grow your <strong>Recovery Garden</strong>.
+                                        </p>
+                                    </div>
+
+                                    <div class="mt-6 flex flex-col sm:flex-row gap-2.5">
+                                        <form method="POST" action="{{ route('tracker.invitations.activate', $pendingTrackerInvitation) }}" class="flex-1">
+                                            @csrf
+                                            <button type="submit" class="w-full inline-flex justify-center items-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-teal-600/25 hover:bg-teal-700 transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                                Activate Medicine Tracker
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route('tracker.invitations.dismiss', $pendingTrackerInvitation) }}">
+                                            @csrf
+                                            <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center rounded-xl bg-slate-100 px-4 py-3 text-xs font-medium text-slate-600 hover:bg-slate-200 transition">
+                                                Maybe Later
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Quick Stats Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <!-- Prescriptions Card -->
@@ -103,23 +164,35 @@
             </div>
 
             <!-- Quick Access Navigation Banners -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Medicine Tracker PWA Link -->
+                <a href="{{ route('tracker.app') }}" class="group block p-6 bg-gradient-to-br from-teal-900 to-emerald-700 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5 border border-teal-600/30">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                    <span class="inline-block px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 text-[10px] font-bold uppercase tracking-wider mb-1">Installable PWA</span>
+                    <h4 class="text-base font-bold mb-1">Medicine Tracker</h4>
+                    <p class="text-xs text-teal-200">Track doses, grow your Recovery Garden, and receive alarms.</p>
+                </a>
+
                 <!-- Medical Timeline Link -->
                 <a href="{{ route('patient.timeline') }}" class="group block p-6 bg-gradient-to-br from-indigo-900 to-indigo-700 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5">
                     <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
-                    <h4 class="text-lg font-bold mb-1">Unified Health Timeline</h4>
-                    <p class="text-xs text-indigo-200">View chronological history of your prescriptions and medical diagnostics.</p>
+                    <span class="inline-block px-2 py-0.5 rounded-full bg-indigo-400/20 text-indigo-200 text-[10px] font-bold uppercase tracking-wider mb-1">Records</span>
+                    <h4 class="text-base font-bold mb-1">Unified Timeline</h4>
+                    <p class="text-xs text-indigo-200">Chronological history of prescriptions and diagnostics.</p>
                 </a>
 
                 <!-- Consent Center Link -->
-                <a href="{{ route('patient.consent-center') }}" class="group block p-6 bg-gradient-to-br from-teal-900 to-teal-700 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5">
+                <a href="{{ route('patient.consent-center') }}" class="group block p-6 bg-gradient-to-br from-teal-950 to-teal-800 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5">
                     <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     </div>
-                    <h4 class="text-lg font-bold mb-1">Consent Center & Audit</h4>
-                    <p class="text-xs text-teal-200">Manage time-bound doctor access tokens and review immutable audit access logs.</p>
+                    <span class="inline-block px-2 py-0.5 rounded-full bg-teal-400/20 text-teal-200 text-[10px] font-bold uppercase tracking-wider mb-1">Security</span>
+                    <h4 class="text-base font-bold mb-1">Consent & Audit</h4>
+                    <p class="text-xs text-teal-200">Manage time-bound access tokens and immutable logs.</p>
                 </a>
 
                 <!-- Health Profile Link -->
@@ -127,8 +200,9 @@
                     <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </div>
-                    <h4 class="text-lg font-bold mb-1">Medical Profile</h4>
-                    <p class="text-xs text-slate-300">Keep your date of birth, blood group, and emergency contact details up to date.</p>
+                    <span class="inline-block px-2 py-0.5 rounded-full bg-slate-400/20 text-slate-300 text-[10px] font-bold uppercase tracking-wider mb-1">Account</span>
+                    <h4 class="text-base font-bold mb-1">Medical Profile</h4>
+                    <p class="text-xs text-slate-300">Keep personal, blood group, and emergency info updated.</p>
                 </a>
             </div>
 
