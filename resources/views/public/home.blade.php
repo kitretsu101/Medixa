@@ -36,6 +36,7 @@
                    class="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-7 py-3 text-sm font-semibold text-stone-700 hover:border-[#b7ddd4] hover:text-[#3f7f72] transition">
                     Browse departments
                 </a>
+                <a href="{{ route('emergency.create') }}" class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-7 py-3 text-sm font-semibold text-red-800 hover:bg-red-100 transition">Emergency</a>
             </div>
         </div>
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminKnowledgeController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\DoctorPortalController;
 use App\Http\Controllers\EmergencyAccessController;
+use App\Http\Controllers\EmergencyRequestController;
 use App\Http\Controllers\LabAssistantController;
 use App\Http\Controllers\LabReportController;
 use App\Http\Controllers\LiveQueueController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\PatientPortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\ReceptionistController;
+use App\Http\Controllers\ReceptionistEmergencyRequestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +28,12 @@ Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/doctors', [PublicController::class, 'doctors'])->name('doctors.index');
 Route::get('/doctors/{doctor}', [PublicController::class, 'doctorProfile'])->name('doctors.show');
 Route::get('/departments/{department}', [PublicController::class, 'departmentDetail'])->name('departments.show');
+
+Route::get('/emergency', [EmergencyRequestController::class, 'create'])->name('emergency.create');
+Route::post('/emergency', [EmergencyRequestController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('emergency.store');
+Route::get('/emergency/sent', [EmergencyRequestController::class, 'sent'])->name('emergency.sent');
 
 /*
 |--------------------------------------------------------------------------
@@ -172,6 +180,8 @@ Route::middleware(['auth', 'role:receptionist'])
         Route::get('/walk-in', [ReceptionistController::class, 'create'])->name('walk-in');
         Route::post('/walk-in', [ReceptionistController::class, 'store'])->name('walk-in.store');
         Route::post('/appointments/{appointment}/check-in', [ReceptionistController::class, 'checkIn'])->name('check-in');
+        Route::get('/emergency-requests', [ReceptionistEmergencyRequestController::class, 'index'])->name('emergency-requests.index');
+        Route::post('/emergency-requests/{emergencyRequest}/update-status', [ReceptionistEmergencyRequestController::class, 'updateStatus'])->name('emergency-requests.update-status');
     });
 
 // ─── Admin Protected Routes ────────────────────────────────────────────
