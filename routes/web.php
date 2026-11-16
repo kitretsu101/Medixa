@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminKnowledgeController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\DoctorPortalController;
+use App\Http\Controllers\EmergencyAccessController;
 use App\Http\Controllers\LabAssistantController;
 use App\Http\Controllers\LabReportController;
 use App\Http\Controllers\LiveQueueController;
@@ -119,6 +120,10 @@ Route::middleware(['auth', 'role:doctor'])
         Route::get('/dashboard', [DoctorPortalController::class, 'dashboard'])->name('dashboard');
         Route::get('/patients', [DoctorPortalController::class, 'patients'])->name('patients.index');
         Route::get('/patients/{patient}', [DoctorPortalController::class, 'patientHistory'])->name('patients.history');
+        Route::post('/patients/{patient}/emergency-access/{resourceType}/{resourceId}', EmergencyAccessController::class)
+            ->whereIn('resourceType', ['lab_report', 'prescription'])
+            ->whereNumber('resourceId')
+            ->name('patients.emergency-access');
         Route::get('/pending-reviews', [DoctorPortalController::class, 'pendingReviews'])->name('pending-reviews');
         Route::get('/appointments/{appointment}/prescription', [DoctorPortalController::class, 'prescriptionForm'])->name('prescriptions.create');
         Route::post('/appointments/{appointment}/prescription', [DoctorPortalController::class, 'storePrescription'])->name('prescriptions.store');

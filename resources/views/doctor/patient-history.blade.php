@@ -131,6 +131,9 @@
                                 </div>
                             @endforeach
                         @endif
+                        @foreach($emergencyPrescriptionIds as $resourceId)
+                            @include('doctor.emergency-access-form', ['patient' => $patient, 'resourceType' => 'prescription', 'resourceId' => $resourceId])
+                        @endforeach
                     </div>
                 </div>
 
@@ -182,6 +185,9 @@
                                 </div>
                             @endforeach
                         @endif
+                        @foreach($emergencyLabReportIds as $resourceId)
+                            @include('doctor.emergency-access-form', ['patient' => $patient, 'resourceType' => 'lab_report', 'resourceId' => $resourceId])
+                        @endforeach
                     </div>
                 </div>
             </div>

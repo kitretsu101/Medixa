@@ -284,6 +284,7 @@ class AdminController extends Controller
                 'users.name as doctor_name',
                 DB::raw('COUNT(*) as access_count'),
                 DB::raw('COUNT(DISTINCT audit_log.patient_id) as unique_patients'),
+                DB::raw('SUM(CASE WHEN audit_log.is_emergency_override = 1 THEN 1 ELSE 0 END) as emergency_access_count'),
             )
             ->groupBy('users.id', 'users.name')
             ->orderByDesc('access_count')

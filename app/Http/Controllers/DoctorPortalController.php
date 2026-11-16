@@ -185,11 +185,23 @@ class DoctorPortalController extends Controller
             }
         }
 
+        $emergencyLabReportIds = LabReport::query()
+            ->where('patient_id', $patient->id)
+            ->whereNotIn('id', $consentedLabReportIds)
+            ->pluck('id');
+
+        $emergencyPrescriptionIds = Prescription::query()
+            ->where('patient_id', $patient->id)
+            ->whereNotIn('id', $consentedPrescriptionIds)
+            ->pluck('id');
+
         return view('doctor.patient-history', [
             'patient' => $patient,
             'labReports' => $labReports,
             'prescriptions' => $prescriptions,
             'activeTokens' => $activeTokens,
+            'emergencyLabReportIds' => $emergencyLabReportIds,
+            'emergencyPrescriptionIds' => $emergencyPrescriptionIds,
         ]);
     }
 

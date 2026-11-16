@@ -104,6 +104,11 @@
                                             <div>
                                                 <p class="font-bold text-slate-900">{{ $item->doctor_name }}</p>
                                                 <p class="text-xs text-slate-400">Doctor ID #{{ $item->doctor_id }}</p>
+                                                @if($item->emergency_access_count > 0)
+                                                    <span class="inline-flex items-center mt-1 px-2 py-1 rounded-full text-xs font-bold bg-red-50 text-red-800 border border-red-200">
+                                                        EMERGENCY OVERRIDE: {{ $item->emergency_access_count }}
+                                                    </span>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
