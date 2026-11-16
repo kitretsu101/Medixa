@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\ConsentToken;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ConsentService
 {
@@ -17,19 +19,40 @@ class ConsentService
         int $resourceId,
         ?int $ttlMinutes = null
     ): ConsentToken {
-        $expiresAt = $ttlMinutes !== null && $ttlMinutes > 0
-            ? now()->addMinutes($ttlMinutes)
-            : null;
+        return DB::transaction(function () use ($patientId, $granteeId, $resourceType, $resourceId, $ttlMinutes): ConsentToken {
+            User::query()->whereKey($patientId)->lockForUpdate()->first();
 
-        return ConsentToken::create([
-            'patient_id' => $patientId,
-            'grantee_id' => $granteeId,
-            'resource_type' => $resourceType,
-            'resource_id' => $resourceId,
-            'issued_at' => now(),
-            'expires_at' => $expiresAt,
-            'revoked_at' => null,
-        ]);
+            $existing = ConsentToken::query()
+                ->where('patient_id', $patientId)
+                ->where('grantee_id', $granteeId)
+                ->where('resource_type', $resourceType)
+                ->where('resource_id', $resourceId)
+                ->whereNull('revoked_at')
+                ->where(function ($query): void {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', now());
+                })
+                ->lockForUpdate()
+                ->first();
+
+            if ($existing !== null) {
+                return $existing;
+            }
+
+            $expiresAt = $ttlMinutes !== null && $ttlMinutes > 0
+                ? now()->addMinutes($ttlMinutes)
+                : null;
+
+            return ConsentToken::create([
+                'patient_id' => $patientId,
+                'grantee_id' => $granteeId,
+                'resource_type' => $resourceType,
+                'resource_id' => $resourceId,
+                'issued_at' => now(),
+                'expires_at' => $expiresAt,
+                'revoked_at' => null,
+            ]);
+        });
     }
 
     /**

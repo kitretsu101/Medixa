@@ -79,6 +79,10 @@
             document.addEventListener('DOMContentLoaded', () => {
                 const doctorId = {{ $activeAppointment->doctor_id }};
                 const patientSerial = {{ (int) $activeAppointment->serial_number }};
+                let latestQueueEventAt = Date.parse(@json($doctorQueue?->updated_at?->toIso8601String())) || 0;
+                let queueEventGeneration = 0;
+                let pollInFlight = false;
+                let pollAgain = false;
 
                 function applyQueue(currentSerial, isPresent, extra = {}) {
                     const doctorStatusEl = document.getElementById('queue-doctor-status');
@@ -137,19 +141,34 @@
                 }
 
                 async function pollQueue() {
+                    if (pollInFlight) {
+                        return;
+                    }
+
+                    pollInFlight = true;
+                    const requestGeneration = queueEventGeneration;
+
                     try {
                         const response = await fetch(@json(route('patient.queue.status')), {
+                            cache: 'no-store',
                             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                         });
                         if (!response.ok) {
                             return;
                         }
                         const data = await response.json();
-                        if (!data.active) {
+                        if (!data.active || requestGeneration !== queueEventGeneration) {
                             return;
                         }
                         applyQueue(Number(data.current_serial ?? 0), Boolean(data.doctor_present), data);
                     } catch (error) {
+                    } finally {
+                        pollInFlight = false;
+
+                        if (pollAgain) {
+                            pollAgain = false;
+                            pollQueue();
+                        }
                     }
                 }
 
@@ -161,7 +180,21 @@
 
                     window.Echo.channel('queue.doctor.' + doctorId)
                         .listen('.queue.updated', (event) => {
-                            applyQueue(Number(event.current_serial ?? 0), Boolean(event.doctor_present));
+                            const updatedAt = Date.parse(event.updated_at);
+
+                            if (!Number.isFinite(updatedAt) || updatedAt < latestQueueEventAt) {
+                                return;
+                            }
+
+                            latestQueueEventAt = updatedAt;
+                            queueEventGeneration++;
+
+                            // Poll the current state: timestamps cannot order changes within the same second.
+                            if (pollInFlight) {
+                                pollAgain = true;
+                            } else {
+                                pollQueue();
+                            }
                         });
                 }
 
