@@ -18,6 +18,7 @@ use App\Services\NotificationService;
 use App\Services\QueueOptimizationService;
 use App\Services\QueueService;
 use App\Support\DoctorName;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -162,6 +163,40 @@ class PatientPortalController extends Controller
             ->values();
 
         return view('patient.timeline', compact('timeline'));
+    }
+
+    public function prescriptionPdf(Request $request, Prescription $prescription): Response
+    {
+        if ((int) $prescription->patient_id !== (int) $request->user()->id) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        $prescription->load('doctor');
+
+        return Pdf::loadView('patient.pdf.prescription', [
+            'patient' => $request->user(),
+            'prescription' => $prescription,
+            'generatedAt' => now(),
+        ])->setPaper('a4')->setOptions([
+            'isRemoteEnabled' => false,
+            'isPhpEnabled' => false,
+            'isJavascriptEnabled' => false,
+        ], true)->download('prescription-'.$prescription->id.'.pdf')
+            ->header('Cache-Control', 'private, no-store, max-age=0');
+    }
+
+    public function timelinePdf(Request $request): Response
+    {
+        return Pdf::loadView('patient.pdf.timeline', [
+            'patient' => $request->user(),
+            'timeline' => $this->timeline()->getData()['timeline'],
+            'generatedAt' => now(),
+        ])->setPaper('a4')->setOptions([
+            'isRemoteEnabled' => false,
+            'isPhpEnabled' => false,
+            'isJavascriptEnabled' => false,
+        ], true)->download('medical-timeline.pdf')
+            ->header('Cache-Control', 'private, no-store, max-age=0');
     }
 
     // ─── Consent Center ──────────────────────────────────────────────

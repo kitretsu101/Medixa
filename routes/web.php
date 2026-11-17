@@ -84,6 +84,8 @@ Route::middleware(['auth', 'role:patient'])
 
         // Medical Timeline
         Route::get('/timeline', [PatientPortalController::class, 'timeline'])->name('timeline');
+        Route::get('/timeline/pdf', [PatientPortalController::class, 'timelinePdf'])->name('timeline.pdf');
+        Route::get('/prescriptions/{prescription}/pdf', [PatientPortalController::class, 'prescriptionPdf'])->name('prescriptions.pdf');
 
         // Appointments
         Route::get('/appointments', [PatientPortalController::class, 'appointments'])->name('appointments.index');

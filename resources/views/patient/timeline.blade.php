@@ -8,6 +8,7 @@
                 <p class="text-sm text-slate-500">A consolidated, chronological stream of all your prescriptions and diagnostic lab reports.</p>
             </div>
             <div class="flex items-center gap-3">
+                <a href="{{ route('patient.timeline.pdf') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-sm transition">Download PDF</a>
                 <a href="{{ route('patient.lab-reports.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-sm transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Upload New Lab Report
@@ -96,6 +97,7 @@
                                     @endif
 
                                     <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                                        <a href="{{ route('patient.prescriptions.pdf', $item->id) }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-800 transition">Download PDF</a>
                                         <span class="text-[11px] text-slate-400">{{ ($item->model?->recoveryJourney?->schedule?->duration_days ?? null) ? $item->model->recoveryJourney->schedule->duration_days . '-Day Treatment Plan' : 'Prescription Treatment Plan' }}</span>
                                         <a href="{{ route('tracker.app') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-800 transition">
                                             <span>Open in Medicine Tracker</span>
