@@ -21,7 +21,13 @@ class LiveQueueController extends Controller
      */
     public function increment(Request $request): JsonResponse
     {
-        $queue = $this->queueService->increment($this->resolveQueue($request), $request->user()?->id);
+        $result = $this->queueService->incrementWithOutcome($this->resolveQueue($request), $request->user()?->id);
+        $queue = $result['queue'];
+
+        if (! $result['advanced']) {
+            return $this->payload('No more patients waiting', $queue);
+        }
+
         $this->notificationService->notifyCalledPatient($queue);
 
         return $this->payload('Serial incremented.', $queue);

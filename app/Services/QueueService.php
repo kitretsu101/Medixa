@@ -30,12 +30,27 @@ class QueueService
 
     public function increment(LiveQueue $queue, ?int $actorId = null): LiveQueue
     {
-        return DB::transaction(function () use ($queue, $actorId): LiveQueue {
+        return $this->incrementWithOutcome($queue, $actorId)['queue'];
+    }
+
+    /** @return array{queue: LiveQueue, advanced: bool} */
+    public function incrementWithOutcome(LiveQueue $queue, ?int $actorId = null): array
+    {
+        return DB::transaction(function () use ($queue, $actorId): array {
             $locked = LiveQueue::query()->whereKey($queue->id)->lockForUpdate()->firstOrFail();
+            $highestSerial = Appointment::query()
+                ->where('doctor_id', $locked->doctor_id)
+                ->whereDate('appointment_date', today())
+                ->max('serial_number');
+
+            if ($highestSerial === null || $locked->current_running_serial >= (int) $highestSerial) {
+                return ['queue' => $locked, 'advanced' => false];
+            }
+
             $next = $this->optimizer->nextWaiting((int) $locked->doctor_id);
 
             if ($next !== null) {
-                return $this->callNext($locked, $next, $actorId);
+                return ['queue' => $this->callNext($locked, $next, $actorId), 'advanced' => true];
             }
 
             $locked->update([
@@ -46,7 +61,7 @@ class QueueService
 
             $this->record($locked->doctor_id, null, $actorId, 'serial_advanced', 'No checked-in patient was waiting, so the serial advanced by one.');
 
-            return $this->broadcast($locked);
+            return ['queue' => $this->broadcast($locked), 'advanced' => true];
         });
     }
 
