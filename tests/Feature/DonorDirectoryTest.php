@@ -64,6 +64,16 @@ class DonorDirectoryTest extends TestCase
         $this->actingAs(User::factory()->admin()->create(), 'web')->get('/admin/blood-connect/donors')->assertDontSee($contact->requester_phone)->assertDontSee('Private requester message');
     }
 
+    public function test_public_directory_with_json_accept_header_does_not_expose_donor_phone(): void
+    {
+        $donor = BloodDonor::factory()->independent()->phoneVerified()->create(['public_profile' => true]);
+
+        $this->getJson('/blood-connect/donors')->assertOk()
+            ->assertHeader('Content-Type', 'text/html; charset=utf-8')
+            ->assertSee($donor->full_name)
+            ->assertDontSee($donor->phone);
+    }
+
     #[TestWith(['requester_phone', ''])]
     #[TestWith(['requester_phone', '01212345678'])]
     #[TestWith(['requester_phone', '+15555555555'])]
