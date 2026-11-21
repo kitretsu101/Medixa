@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\BloodDonor;
 use App\Models\User;
 
 return [
@@ -38,6 +39,10 @@ return [
     */
 
     'guards' => [
+        'donor' => [
+            'driver' => 'donor-session',
+            'provider' => 'donors',
+        ],
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
@@ -62,6 +67,10 @@ return [
     */
 
     'providers' => [
+        'donors' => [
+            'driver' => 'eloquent',
+            'model' => BloodDonor::class,
+        ],
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),

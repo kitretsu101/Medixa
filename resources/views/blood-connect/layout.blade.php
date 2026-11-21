@@ -7,6 +7,8 @@
         <a href="{{ route('blood-connect.requests.create') }}">Request Blood</a>
         <a href="{{ route('blood-connect.requests.index') }}">Find Blood Requests</a>
         <a href="{{ route('blood-connect.donor.register') }}">Become a Donor</a>
+        <a href="{{ route('blood-connect.donors.index') }}">Find Donors</a>
+        <a href="{{ route('blood-connect.donor.login') }}">Donor Login</a>
         @auth<a href="{{ route('blood-connect.donor.profile') }}">My donor profile</a>@endauth
     </nav>
     @include('blood-connect.partials.messages')

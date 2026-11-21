@@ -34,7 +34,7 @@ class BloodConnectTest extends TestCase
         foreach (['index', 'requests.index', 'requests.create', 'sent'] as $page) {
             $this->get(route('blood-connect.'.$page))->assertOk();
         }
-        $this->get(route('blood-connect.donor.register'))->assertRedirect(route('login'));
+        $this->get(route('blood-connect.donor.register'))->assertOk();
         $this->put(route('blood-connect.donor.profile'), $this->donorData())->assertRedirect(route('login'));
     }
 
@@ -146,15 +146,13 @@ class BloodConnectTest extends TestCase
         $this->get(route('blood-connect.requests.show', $request))->assertSee('&lt;script&gt;', false)->assertDontSee('<script>alert(1)</script>', false)->assertDontSee('<img src=x onerror=alert(2)>', false);
     }
 
-    public function test_donor_registration_update_availability_and_history_are_account_scoped(): void
+    public function test_legacy_donor_update_availability_and_history_remain_account_scoped(): void
     {
         $user = User::factory()->patient()->create();
         $other = BloodDonor::factory()->create();
-        $this->actingAs($user)->post(route('blood-connect.donor.store'), $this->donorData(['user_id' => $other->user_id, 'phone_verified_at' => now()]))->assertRedirect(route('blood-connect.donor.profile'));
-        $donor = BloodDonor::where('user_id', $user->id)->sole();
+        $donor = BloodDonor::factory()->create(['user_id' => $user->id]);
         $this->assertNull($donor->phone_verified_at);
-        $this->actingAs($user)->post(route('blood-connect.donor.store'), $this->donorData())->assertSessionHasErrors('full_name');
-        $this->get(route('blood-connect.donor.profile'))->assertOk()->assertDontSee($other->full_name);
+        $this->actingAs($user)->get(route('blood-connect.donor.profile'))->assertOk()->assertDontSee($other->full_name);
         $this->put(route('blood-connect.donor.update'), $this->donorData(['full_name' => 'Updated', 'user_id' => $other->user_id, 'id' => $other->id]))->assertRedirect();
         $this->assertSame('Updated', $donor->fresh()->full_name);
         $this->assertSame($other->full_name, $other->fresh()->full_name);
@@ -237,7 +235,7 @@ class BloodConnectTest extends TestCase
             $this->post(route('admin.blood-connect.requests.'.$action, $request), ['notes' => 'A valid review'])->assertForbidden();
         }
         $this->put(route('admin.blood-connect.requests.update', $request), ['status' => 'active', 'notes' => 'A valid review'])->assertForbidden();
-        $this->put(route('admin.blood-connect.donors.update', $donor), ['availability_status' => 'unavailable'])->assertForbidden();
+        $this->put('/admin/blood-connect/donors/'.$donor->id, ['availability_status' => 'unavailable'])->assertNotFound();
         $this->post(route('admin.blood-connect.donations.store', $request), [])->assertForbidden();
         $this->assertSame('pending', $request->fresh()->status);
         $this->assertDatabaseCount('blood_donation_records', 0);
@@ -349,22 +347,22 @@ class BloodConnectTest extends TestCase
         $this->assertSame('pending', $request->fresh()->status);
     }
 
-    public function test_admin_can_manage_availability_without_changing_donor_consent(): void
+    public function test_admin_donor_list_is_read_only_without_changing_donor_consent(): void
     {
         $donor = BloodDonor::factory()->create(['public_profile' => false, 'contact_consent' => false]);
-        $this->actingAs(User::factory()->admin()->create())->put(route('admin.blood-connect.donors.update', $donor), ['availability_status' => 'unavailable', 'public_profile' => true, 'contact_consent' => true])->assertRedirect();
-        $this->assertSame('unavailable', $donor->fresh()->availability_status);
+        $this->actingAs(User::factory()->admin()->create())->get(route('admin.blood-connect.donors.index'))->assertOk()->assertDontSee('Update availability')->assertDontSee($donor->phone);
+        $this->put('/admin/blood-connect/donors/'.$donor->id, ['availability_status' => 'unavailable', 'public_profile' => true, 'contact_consent' => true])->assertNotFound();
+        $this->assertSame('available', $donor->fresh()->availability_status);
         $this->assertFalse($donor->fresh()->public_profile);
         $this->assertFalse($donor->fresh()->contact_consent);
-        $this->put(route('admin.blood-connect.donors.update',$donor), ['availability_status' => 'invalid'])->assertSessionHasErrors('availability_status');
     }
 
     public function test_existing_account_deletion_is_not_blocked_by_donation_records(): void
     {
         $donor = BloodDonor::factory()->create();
         $record = BloodDonationRecord::factory()->create(['blood_donor_id' => $donor->id]);
-        $this->actingAs($donor->user)->delete(route('profile.destroy'),['password' => 'password'])->assertRedirect('/');
-        $this->assertDatabaseMissing('blood_donors',['id' => $donor->id]);
+        $this->actingAs($donor->user)->delete(route('profile.destroy'), ['password' => 'password'])->assertRedirect('/');
+        $this->assertDatabaseMissing('blood_donors', ['id' => $donor->id]);
         $this->assertNull($record->fresh()->blood_donor_id);
     }
 }
