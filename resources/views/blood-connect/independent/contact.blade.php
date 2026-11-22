@@ -1,7 +1,7 @@
 @extends('blood-connect.independent.layout')
 @section('title', 'Request this donor')
 @section('donor-content')
-<section class="rounded-2xl border border-stone-200 bg-white p-6">
+<section class="rounded-2xl border border-rose-200 bg-white p-5 shadow-sm transition-shadow sm:p-7 hover:shadow-md">
     <h1 class="text-2xl font-bold">Request {{ $donorCard['full_name'] }}</h1>
     <p class="mt-2">{{ $donorCard['blood_group'] }} · {{ $donorCard['district'] }} · {{ $donorCard['area'] }}</p>
     <p class="mt-2 text-sm">Your details will be visible only to this donor, who can contact you directly. Sending a request does not confirm a donation.</p>
@@ -16,8 +16,8 @@
         <x-blood-connect.field name="area" label="Area / location" required maxlength="150" />
         <x-blood-connect.field name="required_date" label="Required date" type="date" :min="today()->toDateString()" :max="today()->addDays(30)->toDateString()" required />
         <x-blood-connect.select name="emergency_level" label="Emergency level" :options="['normal','urgent','critical']" value="normal" required />
-        <div class="sm:col-span-2"><label for="message" class="block font-semibold">Short message (optional)</label><textarea id="message" name="message" rows="3" maxlength="2000" class="mt-2 w-full rounded-xl border border-stone-300">{{ old('message') }}</textarea>@error('message')<p class="text-sm text-red-700">{{ $message }}</p>@enderror</div>
-        <button class="justify-self-start rounded-xl bg-red-700 px-5 py-3 text-white">Send request to donor</button>
+        <div class="sm:col-span-2"><label for="message" class="block font-semibold">Short message (optional)</label><textarea id="message" name="message" rows="3" maxlength="2000" class="mt-2 block min-w-0 w-full rounded-xl border border-rose-200 px-3 py-2 shadow-sm transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20">{{ old('message') }}</textarea>@error('message')<p class="text-sm text-red-700">{{ $message }}</p>@enderror</div>
+        <button class="justify-self-start rounded-xl bg-[#DC2626] px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-[#B91C1C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">Send request to donor</button>
     </form>
 </section>
 @endsection

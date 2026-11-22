@@ -7,7 +7,7 @@
                 </h2>
                 <p class="text-sm text-slate-500">A consolidated, chronological stream of all your prescriptions and diagnostic lab reports.</p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 <a href="{{ route('patient.timeline.pdf') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-sm transition">Download PDF</a>
                 <a href="{{ route('patient.lab-reports.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-sm transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -75,6 +75,14 @@
                                 <h3 class="text-lg font-bold text-slate-900 mb-2">{{ $item->title }}</h3>
 
                                 @if($item->type === 'prescription')
+                                    <section class="my-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50" aria-label="Prescription PDF preview">
+                                        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white p-4">
+                                            <h4 class="text-sm font-semibold text-slate-800">Prescription document</h4>
+                                            <a href="{{ route('patient.prescriptions.pdf', $item->id) }}" class="inline-flex rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">Download PDF</a>
+                                        </div>
+                                        <iframe src="{{ route('patient.prescriptions.pdf', ['prescription' => $item->id, 'preview' => 1]) }}" title="Prescription {{ $item->id }} PDF preview" loading="lazy" class="block h-[32rem] w-full border-0 sm:h-[40rem]"></iframe>
+                                        <p class="p-3 text-xs text-slate-500">If your browser cannot display the preview, use Download PDF to open the document.</p>
+                                    </section>
                                     @if(!empty($item->detail))
                                         <div class="mb-4 text-sm text-slate-600 bg-slate-50 rounded-xl p-3.5 border border-slate-100">
                                             <strong class="text-slate-800 font-semibold block mb-1">Clinical Instructions:</strong>
@@ -96,8 +104,7 @@
                                         </div>
                                     @endif
 
-                                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                                        <a href="{{ route('patient.prescriptions.pdf', $item->id) }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-800 transition">Download PDF</a>
+                                    <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                                         <span class="text-[11px] text-slate-400">{{ ($item->model?->recoveryJourney?->schedule?->duration_days ?? null) ? $item->model->recoveryJourney->schedule->duration_days . '-Day Treatment Plan' : 'Prescription Treatment Plan' }}</span>
                                         <a href="{{ route('tracker.app') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-800 transition">
                                             <span>Open in Medicine Tracker</span>

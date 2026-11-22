@@ -173,7 +173,7 @@ class PatientPortalController extends Controller
 
         $prescription->load('doctor');
 
-        return Pdf::loadView('patient.pdf.prescription', [
+        $pdf = Pdf::loadView('patient.pdf.prescription', [
             'patient' => $request->user(),
             'prescription' => $prescription,
             'generatedAt' => now(),
@@ -181,8 +181,12 @@ class PatientPortalController extends Controller
             'isRemoteEnabled' => false,
             'isPhpEnabled' => false,
             'isJavascriptEnabled' => false,
-        ], true)->download('prescription-'.$prescription->id.'.pdf')
-            ->header('Cache-Control', 'private, no-store, max-age=0');
+        ], true);
+
+        $filename = 'prescription-'.$prescription->id.'.pdf';
+        $response = $request->boolean('preview') ? $pdf->stream($filename) : $pdf->download($filename);
+
+        return $response->header('Cache-Control', 'private, no-store, max-age=0');
     }
 
     public function timelinePdf(Request $request): Response

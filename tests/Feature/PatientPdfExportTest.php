@@ -66,6 +66,32 @@ class PatientPdfExportTest extends TestCase
             ->get(route('patient.prescriptions.pdf', $prescription))->assertForbidden();
     }
 
+    public function test_patient_can_preview_own_prescription_inline_using_the_export_route(): void
+    {
+        $patient = User::factory()->patient()->create(['name' => 'Inline Preview Patient']);
+        $prescription = Prescription::factory()->create(['patient_id' => $patient->id]);
+
+        $response = $this->actingAs($patient)->get(route('patient.prescriptions.pdf', [
+            'prescription' => $prescription, 'preview' => 1,
+        ]));
+
+        $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('inline;', $response->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('prescription-'.$prescription->id.'.pdf', $response->headers->get('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+        $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('Inline Preview Patient', $this->renderedText);
+    }
+
+    public function test_inline_preview_enforces_the_same_ownership_check(): void
+    {
+        $prescription = Prescription::factory()->create();
+
+        $this->actingAs(User::factory()->patient()->create())->get(route('patient.prescriptions.pdf', [
+            'prescription' => $prescription, 'preview' => 1,
+        ]))->assertForbidden();
+    }
+
     public function test_missing_prescription_returns_404(): void
     {
         $this->actingAs(User::factory()->patient()->create())
@@ -78,6 +104,8 @@ class PatientPdfExportTest extends TestCase
 
         $this->get(route('patient.prescriptions.pdf', $prescription))->assertRedirect(route('login'));
         $this->get(route('patient.timeline.pdf'))->assertRedirect(route('login'));
+        $this->get(route('patient.prescriptions.pdf', ['prescription' => $prescription, 'preview' => 1]))
+            ->assertRedirect(route('login'));
     }
 
     #[TestWith(['doctor'])]
@@ -91,6 +119,8 @@ class PatientPdfExportTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => $role]))
             ->get(route('patient.prescriptions.pdf', $prescription))->assertForbidden();
         $this->get(route('patient.timeline.pdf'))->assertForbidden();
+        $this->get(route('patient.prescriptions.pdf', ['prescription' => $prescription, 'preview' => 1]))
+            ->assertForbidden();
     }
 
     public function test_timeline_pdf_contains_only_the_signed_in_patients_existing_timeline_data(): void
@@ -165,9 +195,14 @@ class PatientPdfExportTest extends TestCase
         $response->assertSee(route('patient.timeline.pdf'), false);
         foreach ($prescriptions as $prescription) {
             $response->assertSee(route('patient.prescriptions.pdf', $prescription), false);
+            $response->assertSee('src="'.route('patient.prescriptions.pdf', ['prescription' => $prescription, 'preview' => 1]).'"', false);
         }
+        $this->assertSame(2, substr_count($response->getContent(), '<iframe '));
         $response->assertDontSee(route('patient.prescriptions.pdf', $otherPrescription), false);
         $this->assertSame(3, substr_count($response->getContent(), '>Download PDF</a>'));
+        if ($directory = getenv('MEDIXA_UI_REVIEW_DIRECTORY')) {
+            file_put_contents($directory.DIRECTORY_SEPARATOR.'timeline.html', $response->getContent());
+        }
     }
 
     public function test_full_timeline_exports_all_records_across_multiple_pdf_pages(): void
