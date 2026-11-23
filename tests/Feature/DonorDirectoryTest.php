@@ -20,11 +20,10 @@ class DonorDirectoryTest extends TestCase
         return array_replace(['requester_name' => 'Private requester', 'requester_phone' => '+8801912345678', 'blood_group_needed' => 'A+', 'units_needed' => 2, 'hospital_name' => 'Target Hospital', 'district' => 'Dhaka', 'area' => 'Dhanmondi', 'required_date' => today()->addDay()->toDateString(), 'emergency_level' => 'urgent', 'message' => 'Private requester message'], $overrides);
     }
 
-    public function test_directory_filters_verified_available_consenting_donors_and_never_exposes_phone(): void
+    public function test_directory_filters_available_public_donors_and_never_exposes_phone(): void
     {
         $visible = BloodDonor::factory()->independent()->phoneVerified()->create(['full_name' => 'Visible Donor', 'blood_group' => 'A+', 'area' => 'North']);
         $hidden = [
-            BloodDonor::factory()->independent()->create(['full_name' => 'Unverified Donor']),
             BloodDonor::factory()->independent()->phoneVerified()->create(['full_name' => 'Hidden Donor', 'public_profile' => false]),
             BloodDonor::factory()->independent()->phoneVerified()->create(['full_name' => 'Unavailable Donor', 'availability_status' => 'unavailable']),
         ];
@@ -43,6 +42,43 @@ class DonorDirectoryTest extends TestCase
         $this->get('/blood-connect/donors/'.$visible->id.'/request')->assertOk()->assertDontSee($visible->phone);
         $this->assertArrayNotHasKey('phone', $visible->toArray());
         $this->assertArrayNotHasKey('password', $visible->toArray());
+    }
+
+    public function test_unverified_donor_is_listed_after_login_can_receive_requests_and_keeps_optional_verification(): void
+    {
+        $donor = BloodDonor::factory()->independent()->create(['full_name' => 'Unverified Public Donor', 'contact_consent' => false]);
+
+        $this->post('/blood-connect/donor/login', ['phone' => $donor->phone, 'password' => 'donor-password'])
+            ->assertRedirect('/blood-connect/donor/dashboard');
+        $this->get('/blood-connect/donor/dashboard')->assertOk()
+            ->assertSee('Your profile is publicly listed.')
+            ->assertSee('Verify your phone (optional)')
+            ->assertSee('name="code"', false)
+            ->assertDontSee('Phone not verified — your profile is not publicly listed.');
+        $this->get('/blood-connect/donors')->assertOk()->assertSee($donor->full_name)
+            ->assertSee('Phone verification is optional.')->assertDontSee($donor->phone);
+        $this->getJson('/blood-connect/donors')->assertOk()->assertSee($donor->full_name)->assertDontSee($donor->phone);
+        $this->get('/blood-connect/donors/'.$donor->id.'/request')->assertOk()->assertDontSee($donor->phone);
+        $this->post('/blood-connect/donors/'.$donor->id.'/request', $this->contact())
+            ->assertRedirect('/blood-connect/donors/sent')->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('donor_contact_requests', ['blood_donor_id' => $donor->id, 'status' => 'pending']);
+        $this->assertNull($donor->fresh()->phone_verified_at);
+    }
+
+    #[TestWith([false, 'available'])]
+    #[TestWith([true, 'unavailable'])]
+    #[TestWith([true, 'temporarily_unavailable'])]
+    public function test_unverified_private_or_unavailable_donor_stays_hidden_and_cannot_receive_requests(bool $public, string $availability): void
+    {
+        $donor = BloodDonor::factory()->independent()->create(['public_profile' => $public, 'availability_status' => $availability]);
+
+        $this->get('/blood-connect/donors')->assertOk()->assertDontSee($donor->full_name)->assertDontSee($donor->phone);
+        $this->get('/blood-connect/donors/'.$donor->id.'/request')->assertNotFound();
+        $this->post('/blood-connect/donors/'.$donor->id.'/request', $this->contact())->assertForbidden();
+        $this->assertDatabaseCount('donor_contact_requests', 0);
+        $this->actingAs($donor, 'donor')->get('/blood-connect/donor/dashboard')->assertOk()
+            ->assertSee('Your profile is not publicly listed.')
+            ->assertSee('Verify your phone (optional)');
     }
 
     public function test_public_request_creates_private_row_ignores_privileged_fields_and_reveals_no_donor_phone(): void

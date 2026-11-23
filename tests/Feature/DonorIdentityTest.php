@@ -38,13 +38,13 @@ class DonorIdentityTest extends TestCase
         $this->assertMatchesRegularExpression('/^[0-9]{6}$/', $code);
         $this->assertTrue(Hash::check($donor->phone.'|'.$code, $otp->code_hash));
         $this->assertTrue($otp->expires_at->isFuture());
-        $this->get('/blood-connect/donors')->assertDontSee('Independent Donor');
-        $this->get('/blood-connect/donors/'.$donor->id.'/request')->assertNotFound();
-        $this->post('/blood-connect/donors/'.$donor->id.'/request', [])->assertForbidden();
+        $this->get('/blood-connect/donors')->assertOk()->assertSee('Independent Donor')->assertDontSee($donor->phone);
+        $this->get('/blood-connect/donors/'.$donor->id.'/request')->assertOk()->assertDontSee($donor->phone);
+        $this->post('/blood-connect/donors/'.$donor->id.'/request', [])->assertSessionHasErrors('requester_phone');
         $this->assertDatabaseCount('donor_contact_requests', 0);
     }
 
-    public function test_correct_otp_verifies_once_and_makes_consenting_donor_public(): void
+    public function test_correct_otp_verifies_once_and_keeps_consenting_donor_public(): void
     {
         $this->freezeTime();
         $donor = BloodDonor::factory()->independent()->create();

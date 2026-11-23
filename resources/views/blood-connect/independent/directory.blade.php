@@ -2,7 +2,7 @@
 @section('title', 'Find blood donors')
 @section('donor-content')
 <div class="rounded-3xl border border-rose-200 bg-linear-to-br from-red-700 to-rose-600 p-6 text-white shadow-sm sm:p-9"><p class="mb-2 text-xs font-bold uppercase tracking-widest text-rose-100">Medixa Blood Connect</p><h1 class="text-3xl font-bold sm:text-4xl">Find blood donors</h1></div>
-<p>Only phone-verified, available donors who consent to public profiles appear here. Send a request; the donor can call you directly.</p>
+<p>Available donors who consent to public profiles appear here. Phone verification is optional. Send a request; the donor can call you directly.</p>
 <form method="GET" action="{{ route('blood-connect.donors.index') }}" class="grid gap-4 rounded-2xl border border-rose-200 bg-white p-5 shadow-sm sm:p-6 sm:grid-cols-2 lg:grid-cols-4">
     <x-blood-connect.select name="blood_group" label="Blood group" :options="$groups" :value="request('blood_group')" placeholder="All groups" />
     <x-blood-connect.select name="district" label="District" :options="$districts" :value="request('district')" placeholder="All districts" />

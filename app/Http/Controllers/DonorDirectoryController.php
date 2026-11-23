@@ -22,7 +22,7 @@ class DonorDirectoryController extends Controller
             'area' => ['nullable', 'string', 'max:255'],
             'availability_status' => ['nullable', Rule::in(BloodDonor::AVAILABILITY)],
         ]);
-        $query = BloodDonor::query()->whereNotNull('phone_verified_at')->where('public_profile', true)->where('availability_status', 'available');
+        $query = BloodDonor::query()->where('public_profile', true)->where('availability_status', 'available');
         foreach (['blood_group', 'district', 'availability_status'] as $field) {
             if (! empty($data[$field])) {
                 $query->where($field, $data[$field]);

@@ -17,7 +17,7 @@
         <x-blood-connect.select name="availability_status" label="Availability" :options="['available','temporarily_unavailable','unavailable']" value="available" required />
         <div class="flex flex-col gap-3 sm:col-span-2">
             <input type="hidden" name="public_profile" value="0">
-            <label class="flex items-start gap-3"><input type="checkbox" name="public_profile" value="1" @checked(old('public_profile'))><span>Show my name, blood group and location in the public donor directory after phone verification. My phone will not be shown.</span></label>
+            <label class="flex items-start gap-3"><input type="checkbox" name="public_profile" value="1" @checked(old('public_profile'))><span>Show my name, blood group and location in the public donor directory. Phone verification is optional. My phone will not be shown.</span></label>
             <input type="hidden" name="contact_consent" value="0">
             <label class="flex items-start gap-3"><input type="checkbox" name="contact_consent" value="1" @checked(old('contact_consent'))><span>Allow my contact details to be shared with authorized hospital staff for the existing blood-donation coordination process.</span></label>
             <p class="text-sm">SMS delivery is a development stub. In local development, the verification code appears on your donor dashboard and in the development log.</p>

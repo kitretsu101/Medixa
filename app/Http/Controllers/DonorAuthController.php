@@ -30,7 +30,7 @@ class DonorAuthController extends Controller
         Auth::guard('donor')->login($donor);
         $code = $identity->sendOtp($donor);
 
-        return redirect()->route('blood-connect.donor.dashboard')->with('success', 'Your donor account has been created. Verify your phone to appear in the directory.')->with('dev_otp', $code);
+        return redirect()->route('blood-connect.donor.dashboard')->with('success', 'Your donor account has been created. Public listing follows your directory preferences and availability; phone verification is optional.')->with('dev_otp', $code);
     }
 
     public function login(): View|RedirectResponse

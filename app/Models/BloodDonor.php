@@ -49,6 +49,6 @@ class BloodDonor extends Authenticatable
 
     public function acceptsContactRequests(): bool
     {
-        return $this->phone_verified_at !== null && $this->public_profile && $this->availability_status === 'available';
+        return $this->public_profile && $this->availability_status === 'available';
     }
 }
