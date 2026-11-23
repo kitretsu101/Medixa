@@ -15,6 +15,7 @@
         </div>
     </x-slot>
 
+    @fragment('consultation-prescription')
     <div class="py-8">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
@@ -44,7 +45,7 @@
 
             <!-- Prescription Form -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 p-6 sm:p-8">
-                <form method="POST" action="{{ route('doctor.prescriptions.store', $appointment) }}" class="space-y-6">
+                <form method="POST" action="{{ $prescriptionAction ?? route('doctor.prescriptions.store', $appointment) }}" class="space-y-6">
                     @csrf
 
                     @if ($errors->any())
@@ -190,4 +191,5 @@
             }
         }
     </script>
+    @endfragment
 </x-app-layout>

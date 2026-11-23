@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminKnowledgeController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\DoctorPortalController;
 use App\Http\Controllers\EmergencyAccessController;
 use App\Http\Controllers\EmergencyRequestController;
@@ -128,6 +129,9 @@ Route::middleware(['auth', 'role:doctor'])
     ->name('doctor.')
     ->group(function () {
         Route::get('/dashboard', [DoctorPortalController::class, 'dashboard'])->name('dashboard');
+        Route::get('/consultation', [ConsultationController::class, 'show'])->name('consultation');
+        Route::post('/consultation/next', [ConsultationController::class, 'next'])->name('consultation.next');
+        Route::post('/consultation/appointments/{appointment}/prescription', [ConsultationController::class, 'storePrescription'])->name('consultation.prescriptions.store');
         Route::get('/patients', [DoctorPortalController::class, 'patients'])->name('patients.index');
         Route::get('/patients/{patient}', [DoctorPortalController::class, 'patientHistory'])->name('patients.history');
         Route::post('/patients/{patient}/emergency-access/{resourceType}/{resourceId}', EmergencyAccessController::class)

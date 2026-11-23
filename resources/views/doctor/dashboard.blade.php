@@ -7,10 +7,11 @@
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">Welcome back, <x-doctor-name :name="Auth::user()->name" /></p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
                     <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Doctor Mode Active
                 </span>
+                <a href="{{ route('doctor.consultation') }}" class="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">Let's Start</a>
                 <a href="{{ route('doctor.pending-reviews') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-medium text-xs text-white uppercase tracking-wider hover:bg-indigo-700 transition">
                     Review Lab Reports ({{ $pendingReportReviews }})
                 </a>
