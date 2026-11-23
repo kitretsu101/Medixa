@@ -57,12 +57,19 @@ class DoctorPortalController extends Controller
 
         // Recent appointments
         $recentAppointments = Appointment::where('doctor_id', $doctor->id)
-            ->with(['patient.patientProfile', 'prescription'])
+            ->with(['patient.patientProfile', 'prescription', 'hospital'])
             ->latest('appointment_date')
             ->take(6)
             ->get();
 
         // Live Queue State
+        $approvedAppointments = Appointment::where('doctor_id', $doctor->id)
+            ->where('status', 'approved')
+            ->whereDate('appointment_date', '>=', today())
+            ->with(['patient', 'hospital'])
+            ->orderBy('appointment_date')->orderBy('serial_number')
+            ->paginate(10, ['*'], 'approved_page');
+
         $liveQueue = LiveQueue::firstOrCreate(
             ['doctor_id' => $doctor->id],
             ['current_running_serial' => 0, 'doctor_present_status' => false]
@@ -74,6 +81,7 @@ class DoctorPortalController extends Controller
             'pendingReportReviews',
             'recentAppointments',
             'liveQueue',
+            'approvedAppointments',
         ));
     }
 

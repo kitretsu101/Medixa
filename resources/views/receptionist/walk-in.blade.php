@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div>
             <h2 class="text-2xl font-bold text-slate-900">Walk-in</h2>
-            <p class="text-sm text-slate-500">Book an existing patient and check them in if the visit is today.</p>
+            <p class="text-sm text-slate-500">Request a walk-in for your hospital. Approve it before checking the patient in.</p>
         </div>
     </x-slot>
 

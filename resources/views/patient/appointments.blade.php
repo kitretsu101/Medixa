@@ -31,25 +31,31 @@
                             <tr>
                                 <td class="px-6 py-4">
                                     <div class="font-semibold text-slate-900"><x-doctor-name :name="$appointment->doctor?->name" /></div>
-                                    <div class="text-xs text-slate-500">{{ $appointment->doctor?->doctorProfile?->department?->name }}</div>
+                                    <div class="text-xs text-slate-500">{{ $appointment->doctor?->doctorProfile?->department?->name }}<br>{{ $appointment->hospital?->name }}</div>
                                 </td>
                                 <td class="px-6 py-4">{{ $appointment->appointment_date?->format('M d, Y') }}</td>
                                 <td class="px-6 py-4 font-mono font-bold">#{{ $appointment->serial_number }}</td>
                                 <td class="px-6 py-4 font-mono font-bold text-teal-700">
-                                    @if(in_array($appointment->status, ['pending', 'confirmed'], true) && $appointment->appointment_date?->isToday())
+                                    @if(in_array($appointment->status, ['pending', 'confirmed', 'approved'], true) && $appointment->appointment_date?->isToday())
                                         #{{ (int) ($appointment->doctor?->liveQueue?->current_running_serial ?? 0) }}
                                     @else
                                         <span class="font-sans font-normal text-slate-400">—</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="capitalize">{{ str_replace('_', ' ', $appointment->status) }}</div>
+                                    @if($appointment->status === 'approved')
+                                        <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Approved</span>
+                                    @else
+                                        <div class="capitalize">{{ str_replace('_', ' ', $appointment->status) }}</div>
+                                    @endif
                                     <div class="text-xs text-slate-500">{{ str_replace('_', ' ', $appointment->priority_type ?? 'normal') }}</div>
-                                    @if(in_array($appointment->status, ['pending', 'confirmed'], true) && $appointment->appointment_date?->isToday())
+                                    @if(in_array($appointment->status, ['pending', 'confirmed', 'approved'], true) && $appointment->appointment_date?->isToday())
+                                        @if($appointment->hospital_id === null || $appointment->status !== 'pending')
                                         <form method="POST" action="{{ route('patient.appointments.check-in', $appointment) }}" class="mt-2">
                                             @csrf
                                             <button type="submit" class="text-xs font-semibold text-teal-700">Check in</button>
                                         </form>
+                                        @endif
                                     @endif
                                     @if($appointment->status === 'completed' && $appointment->feedback === null)
                                         <form method="POST" action="{{ route('patient.appointments.feedback', $appointment) }}" class="mt-2 space-y-1">

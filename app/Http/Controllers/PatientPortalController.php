@@ -7,6 +7,7 @@ use App\Models\AppointmentFeedback;
 use App\Models\AssistanceRequest;
 use App\Models\AuditLog;
 use App\Models\ConsentToken;
+use App\Models\Hospital;
 use App\Models\LabReport;
 use App\Models\PatientProfile;
 use App\Models\Prescription;
@@ -368,7 +369,7 @@ class PatientPortalController extends Controller
     {
         $appointments = Appointment::query()
             ->where('patient_id', Auth::id())
-            ->with(['doctor.liveQueue', 'doctor.doctorProfile.department', 'feedback'])
+            ->with(['doctor.liveQueue', 'doctor.doctorProfile.department', 'feedback', 'hospital'])
             ->latest('appointment_date')
             ->paginate(15);
 
@@ -377,18 +378,21 @@ class PatientPortalController extends Controller
 
     public function bookAppointmentForm(Request $request): View
     {
-        $doctors = User::doctors()->with('doctorProfile.department')->whereHas('doctorProfile')->orderBy('name')->get();
+        $hospitals = Hospital::whereHas('doctors.doctorProfile')->orderBy('name')->get();
+        $doctors = User::doctors()->whereNotNull('hospital_id')->with(['doctorProfile.department', 'hospital'])->whereHas('doctorProfile')->orderBy('name')->get();
         $selectedDoctorId = $request->integer('doctor') ?: null;
 
-        return view('patient.book-appointment', compact('doctors', 'selectedDoctorId'));
+        return view('patient.book-appointment', compact('doctors', 'selectedDoctorId', 'hospitals'));
     }
 
     public function storeAppointment(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'hospital_id' => ['required', 'exists:hospitals,id'],
             'doctor_id' => ['required', 'exists:users,id'],
             'appointment_date' => ['required', 'date'],
             'priority_type' => ['nullable', 'in:normal,senior,follow_up'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $doctor = User::query()->findOrFail($validated['doctor_id']);
@@ -399,6 +403,9 @@ class PatientPortalController extends Controller
                 $doctor,
                 $validated['appointment_date'],
                 $validated['priority_type'] ?? 'normal',
+                'scheduled',
+                (int) $validated['hospital_id'],
+                $validated['reason'] ?? null,
             );
         } catch (ValidationException $exception) {
             return back()->withErrors($exception->errors())->withInput();

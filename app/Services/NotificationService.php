@@ -23,7 +23,7 @@ class NotificationService
             ->where('doctor_id', $queue->doctor_id)
             ->where('appointment_date', now()->toDateString())
             ->where('serial_number', $queue->current_running_serial)
-            ->whereIn('status', ['pending', 'confirmed', 'checked_in', 'waiting', 'in_progress'])
+            ->whereIn('status', ['pending', 'confirmed', 'approved', 'checked_in', 'waiting', 'in_progress'])
             ->with('patient')
             ->first();
 

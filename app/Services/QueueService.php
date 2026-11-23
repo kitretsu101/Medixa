@@ -149,7 +149,17 @@ class QueueService
             abort(403);
         }
 
-        if (! in_array($appointment->status, ['pending', 'confirmed'], true)) {
+        if ($actor->isReceptionist() && ($actor->hospital_id === null || (int) $actor->hospital_id !== (int) $appointment->hospital_id)) {
+            abort(404);
+        }
+
+        if ($appointment->hospital_id !== null && $appointment->status === 'pending') {
+            throw ValidationException::withMessages([
+                'appointment' => 'This appointment must be approved by its hospital before check-in.',
+            ]);
+        }
+
+        if (! in_array($appointment->status, ['pending', 'confirmed', 'approved'], true)) {
             throw ValidationException::withMessages([
                 'appointment' => 'This appointment cannot be checked in.',
             ]);
@@ -187,7 +197,7 @@ class QueueService
 
     public function markNoShow(Appointment $appointment, User $actor): Appointment
     {
-        if (! in_array($appointment->status, ['pending', 'confirmed'], true)) {
+        if (! in_array($appointment->status, ['pending', 'confirmed', 'approved'], true)) {
             throw ValidationException::withMessages([
                 'appointment' => 'Only an appointment that has not been checked in can be marked as a no-show.',
             ]);

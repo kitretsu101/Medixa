@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Services\AppointmentService;
+use App\Services\NotificationService;
 use App\Services\QueueService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -16,11 +18,17 @@ class ReceptionistController extends Controller
     public function __construct(
         protected AppointmentService $appointments,
         protected QueueService $queues,
+        protected NotificationService $notifications,
     ) {}
 
-    public function dashboard(): View
+    public function dashboard(Request $request): View
     {
+        if ($request->user()->hospital_id === null) {
+            return view('receptionist.dashboard', ['visits' => collect(), 'requests' => collect()]);
+        }
+
         $visits = Appointment::query()
+            ->where('hospital_id', $request->user()->hospital_id)
             ->whereDate('appointment_date', today())
             ->whereNotIn('status', ['cancelled'])
             ->with(['patient:id,name', 'doctor:id,name'])
@@ -28,18 +36,24 @@ class ReceptionistController extends Controller
             ->orderBy('serial_number')
             ->get(['id', 'patient_id', 'doctor_id', 'serial_number', 'status', 'priority_type', 'visit_type', 'checked_in_at']);
 
-        return view('receptionist.dashboard', compact('visits'));
+        $requests = Appointment::where('hospital_id', $request->user()->hospital_id)
+            ->where('status', 'pending')->with(['patient', 'doctor', 'hospital'])
+            ->orderBy('appointment_date')->orderBy('serial_number')->take(10)->get();
+
+        return view('receptionist.dashboard', compact('visits', 'requests'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        $doctors = User::doctors()->with('doctorProfile.department')->whereHas('doctorProfile')->orderBy('name')->get();
+        $hospitalId = $this->assignedHospitalId($request);
+        $doctors = User::doctors()->where('hospital_id', $hospitalId)->with('doctorProfile.department')->whereHas('doctorProfile')->orderBy('name')->get();
 
         return view('receptionist.walk-in', compact('doctors'));
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $hospitalId = $this->assignedHospitalId($request);
         $validated = $request->validate([
             'patient_email' => ['required', 'email'],
             'doctor_id' => ['required', 'exists:users,id'],
@@ -53,7 +67,7 @@ class ReceptionistController extends Controller
             return back()->withErrors(['patient_email' => 'No patient account matches that email.'])->withInput();
         }
 
-        $doctor = User::query()->findOrFail($validated['doctor_id']);
+        $doctor = User::query()->where('hospital_id', $hospitalId)->findOrFail($validated['doctor_id']);
 
         try {
             $appointment = $this->appointments->book(
@@ -62,22 +76,20 @@ class ReceptionistController extends Controller
                 $validated['appointment_date'],
                 $validated['priority_type'],
                 'walk_in',
+                $hospitalId,
             );
-
-            if ($appointment->appointment_date?->isToday()) {
-                $this->queues->checkIn($appointment, $request->user());
-            }
         } catch (ValidationException $exception) {
             return back()->withErrors($exception->errors())->withInput();
         }
 
         return redirect()
             ->route('receptionist.dashboard')
-            ->with('status', 'Walk-in booked. Serial #'.$appointment->serial_number.' · '.$appointment->priority_type.'.');
+            ->with('status', 'Walk-in requested. Approve before check-in. Serial #'.$appointment->serial_number.' · '.$appointment->priority_type.'.');
     }
 
     public function checkIn(Request $request, Appointment $appointment): RedirectResponse
     {
+        $this->appointmentForHospital($request, $appointment);
         try {
             $this->queues->checkIn($appointment, $request->user());
         } catch (ValidationException $exception) {
@@ -85,5 +97,71 @@ class ReceptionistController extends Controller
         }
 
         return back()->with('status', 'Checked in serial #'.$appointment->serial_number.'.');
+    }
+
+    public function appointments(Request $request): View
+    {
+        $requests = Appointment::where('hospital_id', $this->assignedHospitalId($request))
+            ->with(['patient', 'doctor', 'hospital'])->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")
+            ->orderByDesc('appointment_date')->orderByDesc('id')->paginate(20);
+
+        return view('receptionist.appointments', compact('requests'));
+    }
+
+    public function showAppointment(Request $request, Appointment $appointment): View
+    {
+        $this->appointmentForHospital($request, $appointment);
+        $appointment->load(['patient', 'doctor', 'hospital']);
+
+        return view('receptionist.appointment', compact('appointment'));
+    }
+
+    public function approveAppointment(Request $request, Appointment $appointment): RedirectResponse
+    {
+        return $this->changeAppointmentStatus($request, $appointment, 'approved');
+    }
+
+    public function rejectAppointment(Request $request, Appointment $appointment): RedirectResponse
+    {
+        return $this->changeAppointmentStatus($request, $appointment, 'rejected');
+    }
+
+    private function assignedHospitalId(Request $request): int
+    {
+        if ($request->user()->hospital_id === null) {
+            abort(403, 'No hospital is assigned to your account. Contact an administrator.');
+        }
+
+        return (int) $request->user()->hospital_id;
+    }
+
+    private function appointmentForHospital(Request $request, Appointment $appointment): void
+    {
+        if ((int) $appointment->hospital_id !== $this->assignedHospitalId($request)) {
+            abort(404);
+        }
+    }
+
+    private function changeAppointmentStatus(Request $request, Appointment $appointment, string $status): RedirectResponse
+    {
+        $hospitalId = $this->assignedHospitalId($request);
+        $updated = DB::transaction(function () use ($appointment, $hospitalId, $status): Appointment {
+            $locked = Appointment::whereKey($appointment->id)->where('hospital_id', $hospitalId)->lockForUpdate()->firstOrFail();
+            if ($locked->status !== 'pending') {
+                throw ValidationException::withMessages(['appointment' => 'Only pending appointments can be approved or rejected.']);
+            }
+            $locked->update(['status' => $status]);
+
+            return $locked;
+        });
+        $updated->load(['patient', 'doctor']);
+        if ($updated->patient !== null) {
+            $this->notifications->alert($updated->patient, 'Appointment '.$status, 'Your appointment on '.$updated->appointment_date->format('d M Y').' was '.$status.'.', route('patient.appointments.index'));
+        }
+        if ($status === 'approved' && $updated->doctor !== null) {
+            $this->notifications->alert($updated->doctor, 'Appointment approved', 'An appointment was approved by your hospital reception.', route('doctor.dashboard'));
+        }
+
+        return back()->with('status', 'Appointment '.$status.'.');
     }
 }

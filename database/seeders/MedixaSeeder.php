@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\ConsentToken;
 use App\Models\Department;
 use App\Models\DoctorProfile;
+use App\Models\Hospital;
 use App\Models\LabReport;
 use App\Models\LiveQueue;
 use App\Models\PatientProfile;
@@ -34,6 +35,8 @@ class MedixaSeeder extends Seeder
      */
     public function run(): void
     {
+        $demoHospital = Hospital::firstOrCreate(['name' => 'Medixa Hospital']);
+
         // ── 1. Admin User ──────────────────────────────────────────────────
         $admin = User::firstOrCreate(
             ['email' => 'admin@medixa.test'],
@@ -51,6 +54,7 @@ class MedixaSeeder extends Seeder
                 'name' => 'OPD Reception',
                 'password' => Hash::make('password'),
                 'role' => 'receptionist',
+                'hospital_id' => $demoHospital->id,
                 'email_verified_at' => now(),
             ]
         );
@@ -162,6 +166,7 @@ class MedixaSeeder extends Seeder
                     'name' => $d['name'],
                     'password' => Hash::make('password'),
                     'role' => 'doctor',
+                    'hospital_id' => $demoHospital->id,
                     'email_verified_at' => now(),
                 ]
             );

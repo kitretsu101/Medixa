@@ -121,6 +121,7 @@ class QueueOptimizationTest extends TestCase
         $this->actingAs($patient)
             ->from(route('patient.appointments.create'))
             ->post(route('patient.appointments.store'), [
+                'hospital_id' => $doctor->hospital_id,
                 'doctor_id' => $doctor->id,
                 'appointment_date' => $date,
                 'priority_type' => 'normal',
@@ -136,6 +137,7 @@ class QueueOptimizationTest extends TestCase
         $this->actingAs($patient)
             ->from(route('patient.appointments.create'))
             ->post(route('patient.appointments.store'), [
+                'hospital_id' => $doctor->hospital_id,
                 'doctor_id' => $doctor->id,
                 'appointment_date' => now()->addDay()->toDateString(),
                 'priority_type' => 'emergency',

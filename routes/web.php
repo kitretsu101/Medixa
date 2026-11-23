@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminHospitalController;
 use App\Http\Controllers\AdminKnowledgeController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ConsultationController;
@@ -186,6 +187,10 @@ Route::middleware(['auth', 'role:receptionist'])
         Route::get('/walk-in', [ReceptionistController::class, 'create'])->name('walk-in');
         Route::post('/walk-in', [ReceptionistController::class, 'store'])->name('walk-in.store');
         Route::post('/appointments/{appointment}/check-in', [ReceptionistController::class, 'checkIn'])->name('check-in');
+        Route::get('/appointments', [ReceptionistController::class, 'appointments'])->name('appointments.index');
+        Route::get('/appointments/{appointment}', [ReceptionistController::class, 'showAppointment'])->name('appointments.show');
+        Route::post('/appointments/{appointment}/approve', [ReceptionistController::class, 'approveAppointment'])->name('appointments.approve');
+        Route::post('/appointments/{appointment}/reject', [ReceptionistController::class, 'rejectAppointment'])->name('appointments.reject');
         Route::get('/emergency-requests', [ReceptionistEmergencyRequestController::class, 'index'])->name('emergency-requests.index');
         Route::post('/emergency-requests/{emergencyRequest}/update-status', [ReceptionistEmergencyRequestController::class, 'updateStatus'])->name('emergency-requests.update-status');
     });
@@ -196,6 +201,10 @@ Route::middleware(['auth', 'role:admin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/hospitals', [AdminHospitalController::class, 'index'])->name('hospitals.index');
+        Route::post('/hospitals', [AdminHospitalController::class, 'store'])->name('hospitals.store');
+        Route::post('/hospitals/staff/{user}', [AdminHospitalController::class, 'assignStaff'])->name('hospitals.staff.assign');
+        Route::post('/hospitals/appointments/{appointment}', [AdminHospitalController::class, 'assignAppointment'])->name('hospitals.appointments.assign');
 
         // Departments CRUD
         Route::get('/departments', [AdminController::class, 'departments'])->name('departments.index');

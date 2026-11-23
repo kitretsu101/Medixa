@@ -61,6 +61,7 @@
                         <x-nav-link :href="route('admin.doctors.index')" :active="request()->routeIs('admin.doctors.*')">
                             {{ __('Doctors') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.hospitals.index')" :active="request()->routeIs('admin.hospitals.*')">Hospitals</x-nav-link>
                         <x-nav-link :href="route('admin.schedule')" :active="request()->routeIs('admin.schedule')">
                             {{ __('Schedule') }}
                         </x-nav-link>
@@ -195,6 +196,7 @@
                 <x-responsive-nav-link :href="route('admin.doctors.index')" :active="request()->routeIs('admin.doctors.*')">
                     {{ __('Doctors') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.hospitals.index')" :active="request()->routeIs('admin.hospitals.*')">Hospitals</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.schedule')" :active="request()->routeIs('admin.schedule')">
                     {{ __('Schedule') }}
                 </x-responsive-nav-link>

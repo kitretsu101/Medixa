@@ -366,7 +366,7 @@ class ChatService
             );
         }
 
-        $doctor = User::doctors()
+        $doctor = User::doctors()->whereNotNull('hospital_id')
             ->with('doctorProfile.department')
             ->whereKey($confirmation['doctor_id'])
             ->whereHas('doctorProfile')
@@ -460,7 +460,7 @@ class ChatService
      */
     private function visitOffers(?int $departmentId = null): array
     {
-        $doctors = User::doctors()
+        $doctors = User::doctors()->whereNotNull('hospital_id')
             ->with('doctorProfile.department')
             ->whereHas('doctorProfile')
             ->when($departmentId !== null, fn (Builder $query): Builder => $query->whereHas(

@@ -24,7 +24,7 @@ class AppointmentService
      *
      * @throws ValidationException
      */
-    public function book(User $patient, User $doctor, string $date, string $priority = 'normal', string $visitType = 'scheduled'): Appointment
+    public function book(User $patient, User $doctor, string $date, string $priority = 'normal', string $visitType = 'scheduled', ?int $hospitalId = null, ?string $reason = null): Appointment
     {
         if (! $patient->isPatient()) {
             throw ValidationException::withMessages([
@@ -60,8 +60,14 @@ class AppointmentService
 
         $dateString = $appointmentDate->toDateString();
 
-        return DB::transaction(function () use ($patient, $doctor, $dateString, $priority, $visitType): Appointment {
-            User::query()->whereKey($doctor->id)->lockForUpdate()->first();
+        return DB::transaction(function () use ($patient, $doctor, $dateString, $priority, $visitType, $hospitalId, $reason): Appointment {
+            $lockedDoctor = User::query()->whereKey($doctor->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedDoctor->hospital_id === null || ($hospitalId !== null && (int) $lockedDoctor->hospital_id !== $hospitalId)) {
+                throw ValidationException::withMessages([
+                    'doctor_id' => 'Select a doctor assigned to the selected hospital.',
+                ]);
+            }
 
             $rows = Appointment::query()
                 ->where('doctor_id', $doctor->id)
@@ -99,6 +105,8 @@ class AppointmentService
             $appointment = Appointment::create([
                 'patient_id' => $patient->id,
                 'doctor_id' => $doctor->id,
+                'hospital_id' => $lockedDoctor->hospital_id,
+                'reason' => $reason,
                 'appointment_date' => $dateString,
                 'serial_number' => $maxSerial + 1,
                 'status' => 'pending',

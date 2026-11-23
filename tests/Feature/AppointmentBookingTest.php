@@ -21,6 +21,7 @@ class AppointmentBookingTest extends TestCase
         $date = now()->addDay()->toDateString();
 
         $response = $this->actingAs($patient)->post(route('patient.appointments.store'), [
+            'hospital_id' => $doctor->hospital_id,
             'doctor_id' => $doctor->id,
             'appointment_date' => $date,
         ]);
@@ -37,6 +38,7 @@ class AppointmentBookingTest extends TestCase
         ]);
 
         $duplicate = $this->actingAs($patient)->from(route('patient.appointments.create'))->post(route('patient.appointments.store'), [
+            'hospital_id' => $doctor->hospital_id,
             'doctor_id' => $doctor->id,
             'appointment_date' => $date,
         ]);

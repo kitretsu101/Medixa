@@ -135,6 +135,8 @@
                 </div>
             </div>
 
+            @include('doctor.approved-appointments')
+
             <!-- Recent OPD Appointments Section -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
                 <div class="p-6 border-b border-gray-100 flex items-center justify-between">
@@ -184,6 +186,10 @@
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
                                                     Completed
                                                 </span>
+                                            @elseif($appointment->status === 'approved')
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Approved</span>
+                                            @elseif($appointment->status === 'rejected')
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">Rejected</span>
                                             @elseif($appointment->status === 'confirmed')
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                                                     Confirmed
@@ -194,7 +200,7 @@
                                                 </span>
                                             @else
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                                                    Pending
+                                                    {{ ucfirst(str_replace('_', ' ', $appointment->status)) }}
                                                 </span>
                                             @endif
                                         </td>
@@ -202,7 +208,7 @@
                                             <a href="{{ route('doctor.patients.history', $appointment->patient_id) }}" class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg text-xs font-medium transition">
                                                 Consent History
                                             </a>
-                                            @if($appointment->status !== 'completed' && $appointment->status !== 'cancelled')
+                                            @if($appointment->status !== 'completed' && $appointment->status !== 'cancelled' && $appointment->status !== 'rejected')
                                                 <a href="{{ route('doctor.prescriptions.create', $appointment) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-medium shadow-sm transition">
                                                     Write Prescription
                                                 </a>
