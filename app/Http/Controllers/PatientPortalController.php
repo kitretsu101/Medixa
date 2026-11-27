@@ -378,7 +378,7 @@ class PatientPortalController extends Controller
 
     public function bookAppointmentForm(Request $request): View
     {
-        $hospitals = Hospital::whereHas('doctors.doctorProfile')->orderBy('name')->get();
+        $hospitals = Hospital::orderBy('name')->get();
         $doctors = User::doctors()->whereNotNull('hospital_id')->with(['doctorProfile.department', 'hospital'])->whereHas('doctorProfile')->orderBy('name')->get();
         $selectedDoctorId = $request->integer('doctor') ?: null;
 

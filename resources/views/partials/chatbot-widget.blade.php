@@ -113,6 +113,7 @@
             network: 'The assistant could not be reached. Please try again.',
             limited: 'Please wait a moment before sending another message.',
             invalid: 'Enter a message of 2,000 characters or fewer.',
+            expired: 'Your page session has expired. Refresh the page and try again.',
             retry: 'Try again',
             sources: 'Sources',
             offers: 'Routine visits',
@@ -139,6 +140,7 @@
             network: 'সহকারীর সাথে সংযোগ হয়নি। আবার চেষ্টা করুন।',
             limited: 'আরেকটি বার্তা পাঠানোর আগে একটু অপেক্ষা করুন।',
             invalid: 'বার্তা ২,০০০ অক্ষরের মধ্যে রাখুন।',
+            expired: 'আপনার পৃষ্ঠার সেশনের মেয়াদ শেষ হয়েছে। পৃষ্ঠাটি রিফ্রেশ করে আবার চেষ্টা করুন।',
             retry: 'আবার চেষ্টা',
             sources: 'সূত্র',
             offers: 'নিয়মিত ভিজিট',
@@ -155,10 +157,27 @@
     };
 
     let pendingChatMessage = null;
+    let pendingChatConfirmation = null;
+    let chatRequestPending = false;
     let chatStatusKey = null;
+    const chatMemory = {};
+    const chatStorage = {
+        getItem(key) {
+            if (Object.prototype.hasOwnProperty.call(chatMemory, key)) return chatMemory[key];
+            try { return sessionStorage.getItem(key); } catch { return null; }
+        },
+        setItem(key, value) {
+            chatMemory[key] = value;
+            try { sessionStorage.setItem(key, value); } catch {}
+        },
+        removeItem(key) {
+            delete chatMemory[key];
+            try { sessionStorage.removeItem(key); } catch {}
+        },
+    };
 
     function chatLocale() {
-        return sessionStorage.getItem(CHAT_LOCALE_KEY) === 'bn' ? 'bn' : 'en';
+        return chatStorage.getItem(CHAT_LOCALE_KEY) === 'bn' ? 'bn' : 'en';
     }
 
     function chatCopy() {
@@ -166,7 +185,7 @@
     }
 
     function setChatLocale(locale) {
-        sessionStorage.setItem(CHAT_LOCALE_KEY, locale === 'bn' ? 'bn' : 'en');
+        chatStorage.setItem(CHAT_LOCALE_KEY, locale === 'bn' ? 'bn' : 'en');
         applyChatLocale();
     }
 
@@ -216,12 +235,13 @@
     }
 
     function storedSessionToken() {
-        return sessionStorage.getItem(CHAT_SESSION_KEY) || '';
+        return chatStorage.getItem(CHAT_SESSION_KEY) || '';
     }
 
     async function resetMedixaChat() {
         const token = storedSessionToken();
-        sessionStorage.removeItem(CHAT_SESSION_KEY);
+        if (chatRequestPending) return;
+        chatStorage.removeItem(CHAT_SESSION_KEY);
         const stream = document.getElementById('medixa-chat-messages');
         if (stream) {
             stream.querySelectorAll(':scope > div').forEach((node) => {
@@ -233,16 +253,24 @@
         const prompts = document.getElementById('medixa-quick-prompts');
         if (prompts) prompts.classList.remove('hidden');
         pendingChatMessage = null;
+        pendingChatConfirmation = null;
         setChatStatus('');
         if (!token) return;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
-        await fetch('{{ url('/chatbot/sessions') }}/' + encodeURIComponent(token), {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
+        try {
+            const response = await fetch('{{ url('/chatbot/sessions') }}/' + encodeURIComponent(token), {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+            if (!response.ok && response.status !== 404) {
+                setChatStatus(response.status === 419 ? 'expired' : 'network');
             }
-        });
+        } catch {
+            setChatStatus('network');
+        }
     }
 
     function toggleMedixaChat() {
@@ -363,7 +391,7 @@
         if (retry) {
             retry.addEventListener('click', () => {
                 if (pendingChatMessage) {
-                    postChatMessage(pendingChatMessage, false);
+                    postChatMessage(pendingChatMessage, false, true, pendingChatConfirmation);
                 }
             });
         }
@@ -393,6 +421,7 @@
 
     function handleMedixaChatSubmit(e) {
         if (e && e.preventDefault) e.preventDefault();
+        if (chatRequestPending) return;
         const input = document.getElementById('medixa-chat-input');
         if (!input) return;
         const message = input.value.trim();
@@ -405,6 +434,8 @@
     }
 
     async function postChatMessage(message, showUserBubble, allowSessionRetry = true, confirm = null) {
+        if (chatRequestPending) return;
+        chatRequestPending = true;
         const input = document.getElementById('medixa-chat-input');
         const sendBtn = document.getElementById('medixa-chat-send-btn');
         const typing = document.getElementById('medixa-typing-indicator');
@@ -412,6 +443,7 @@
         const copy = chatCopy();
 
         pendingChatMessage = message;
+        pendingChatConfirmation = confirm;
         setChatStatus('');
         if (quickPrompts) quickPrompts.classList.add('hidden');
         if (showUserBubble) appendChatMessage('user', message);
@@ -419,10 +451,14 @@
         if (sendBtn) sendBtn.disabled = true;
         if (typing) typing.classList.remove('hidden');
 
+        const controller = new AbortController();
+        const requestTimeout = setTimeout(() => controller.abort(), 30000);
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
             const response = await fetch('{{ route('chatbot.message') }}', {
                 method: 'POST',
+                credentials: 'same-origin',
+                signal: controller.signal,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
@@ -444,12 +480,13 @@
             }
 
             if (response.status === 404 && allowSessionRetry && storedSessionToken()) {
-                sessionStorage.removeItem(CHAT_SESSION_KEY);
-                return postChatMessage(message, false, false, confirm);
+                chatStorage.removeItem(CHAT_SESSION_KEY);
+                chatRequestPending = false;
+                return await postChatMessage(message, false, false, confirm);
             }
 
             if (data.session_token) {
-                sessionStorage.setItem(CHAT_SESSION_KEY, data.session_token);
+                chatStorage.setItem(CHAT_SESSION_KEY, data.session_token);
             }
 
             if (response.status === 429) {
@@ -462,16 +499,24 @@
                 return;
             }
 
+            if (response.status === 419) {
+                setChatStatus('expired');
+                return;
+            }
+
             if (!response.ok || data.error) {
                 appendChatMessage('assistant', data.reply || copy.network, null, data.retryable !== false);
                 return;
             }
 
             pendingChatMessage = null;
+            pendingChatConfirmation = null;
             appendChatMessage('assistant', data.reply || copy.network, data.booking, false, data.sources, data.offers);
         } catch (err) {
             appendChatMessage('assistant', copy.network, null, true);
         } finally {
+            clearTimeout(requestTimeout);
+            chatRequestPending = false;
             if (typing) typing.classList.add('hidden');
             if (input) input.disabled = false;
             if (sendBtn) sendBtn.disabled = false;

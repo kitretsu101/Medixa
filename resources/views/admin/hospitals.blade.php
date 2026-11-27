@@ -10,6 +10,16 @@
             <button class="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700">Add hospital</button>
         </form>
         <section class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <h3 class="p-5 text-lg font-bold text-slate-900">Hospitals</h3>
+            <table class="min-w-full text-left text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="p-4">Hospital name</th></tr></thead><tbody class="divide-y divide-slate-100">
+                @forelse($hospitals as $hospital)
+                    <tr><td class="p-4">{{ $hospital->name }}</td></tr>
+                @empty
+                    <tr><td class="p-4 text-slate-500">No hospitals have been added yet.</td></tr>
+                @endforelse
+            </tbody></table>
+        </section>
+        <section class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
             <h3 class="p-5 text-lg font-bold text-slate-900">Doctor and receptionist assignments</h3>
             <table class="min-w-full text-left text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="p-4">Staff</th><th class="p-4">Role</th><th class="p-4">Hospital assignment</th></tr></thead><tbody class="divide-y divide-slate-100">
             @forelse($staff as $member)

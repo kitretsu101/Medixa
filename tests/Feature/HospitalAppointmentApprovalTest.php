@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\MedixaSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
@@ -17,6 +18,65 @@ use Tests\TestCase;
 class HospitalAppointmentApprovalTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_today_and_walk_in_use_bangladesh_date_after_local_midnight(): void
+    {
+        $this->assertSame('Asia/Dhaka', config('app.timezone'));
+        $this->travelTo(Carbon::parse('2026-11-26 00:30:00', 'Asia/Dhaka'));
+        $hospital = Hospital::factory()->create();
+        $doctor = $this->doctor($hospital);
+        $patient = User::factory()->patient()->create();
+        $todayVisit = $this->appointment($doctor, ['appointment_date' => '2026-11-26']);
+        $yesterdayVisit = $this->appointment($doctor, ['appointment_date' => '2026-11-25']);
+        $this->actingAs(User::factory()->receptionist()->create(['hospital_id' => $hospital->id]))
+            ->get(route('receptionist.dashboard'))->assertOk()
+            ->assertViewHas('visits', fn ($rows): bool => $rows->contains('id', $todayVisit->id) && ! $rows->contains('id', $yesterdayVisit->id));
+        $this->get(route('receptionist.walk-in'))->assertSee('value="2026-11-26"', false);
+        $this->post(route('receptionist.walk-in.store'), ['patient_email' => $patient->email, 'doctor_id' => $doctor->id, 'appointment_date' => '2026-11-26', 'priority_type' => 'normal'])
+            ->assertSessionHasNoErrors()->assertRedirect(route('receptionist.dashboard'));
+        $this->assertDatabaseHas('appointments', ['patient_id' => $patient->id, 'hospital_id' => $hospital->id, 'appointment_date' => '2026-11-26', 'status' => 'pending', 'visit_type' => 'walk_in']);
+    }
+
+    public function test_booking_lists_all_hospitals_and_only_assigned_doctors_with_profiles(): void
+    {
+        $hospital = Hospital::factory()->create(['name' => 'Staffed Hospital']);
+        $empty = Hospital::factory()->create(['name' => 'Hospital Awaiting Staff']);
+        $doctor = $this->doctor($hospital);
+        $unassigned = $this->doctor($hospital);
+        $unassigned->update(['hospital_id' => null]);
+        $this->actingAs(User::factory()->patient()->create())->get(route('patient.appointments.create'))
+            ->assertOk()->assertSee($hospital->name)->assertSee($empty->name)->assertSee($doctor->name)
+            ->assertDontSee($unassigned->name)
+            ->assertViewHas('hospitals', fn ($rows): bool => $rows->count() === 2)
+            ->assertViewHas('doctors', fn ($rows): bool => $rows->count() === 1 && $rows->first()->is($doctor));
+    }
+
+    public function test_hospital_name_is_rendered_in_admin_table_even_without_staff(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+        $this->post(route('admin.hospitals.store'), ['name' => 'Newly Added Hospital'])->assertSessionHasNoErrors();
+        $this->get(route('admin.hospitals.index'))->assertOk()
+            ->assertSee('<td class="p-4">Newly Added Hospital</td>', false);
+    }
+
+    public function test_admin_assignment_enables_existing_receptionist_and_preserves_historical_request(): void
+    {
+        $this->freezeTime();
+        $hospital = Hospital::factory()->create();
+        $doctor = $this->doctor($hospital);
+        $receptionist = User::factory()->receptionist()->create(['hospital_id' => null]);
+        $appointment = $this->appointment($doctor, ['hospital_id' => null, 'appointment_date' => today()->addDays(4)]);
+        $this->actingAs($receptionist)->get(route('receptionist.walk-in'))->assertForbidden();
+        $this->actingAs(User::factory()->admin()->create())
+            ->post(route('admin.hospitals.staff.assign', $receptionist), ['hospital_id' => $hospital->id])->assertSessionHasNoErrors();
+        $this->post(route('admin.hospitals.appointments.assign', $appointment), ['hospital_id' => $hospital->id])->assertSessionHasNoErrors();
+        $this->actingAs($receptionist->fresh())->get(route('receptionist.walk-in'))->assertOk()->assertSee($doctor->name);
+        $this->get(route('receptionist.dashboard'))->assertOk()->assertSee($appointment->patient->name)
+            ->assertViewHas('requests', fn ($rows): bool => $rows->contains('id', $appointment->id))
+            ->assertViewHas('visits', fn ($rows): bool => $rows->isEmpty());
+        $this->assertSame('pending', $appointment->fresh()->status);
+        $this->assertSame(today()->addDays(4)->toDateString(), $appointment->fresh()->appointment_date->toDateString());
+    }
 
     public function test_patient_request_approval_doctor_visibility_and_check_in_work_end_to_end(): void
     {
