@@ -25,7 +25,7 @@
                             <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-400/20 text-teal-200 border border-teal-400/30">Privacy First</span>
                         </h4>
                         <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                            Files are saved to an isolated, encrypted private disk. Upon upload, our system automatically generates a <strong class="text-white font-semibold">24-hour consent token</strong> granting access to your assigned physician. The token will expire automatically or can be revoked anytime in your Consent Center.
+                            Files are saved to an isolated private disk. Upon upload, our system automatically generates a <strong class="text-white font-semibold">24-hour consent token</strong> granting access to your assigned physician. The token will expire automatically.
                         </p>
                     </div>
                 </div>
@@ -97,6 +97,7 @@
                                 <p class="text-xs text-slate-500">PDF, JPG, PNG up to 10MB (stored securely on private disk)</p>
                             </div>
                         </div>
+                        <x-report-file-selection />
                         @error('report_file')
                             <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror

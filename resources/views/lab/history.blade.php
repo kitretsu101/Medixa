@@ -9,7 +9,7 @@
     <div class="py-8">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             @if(session('status'))
-                <div class="mb-4 rounded-xl bg-teal-50 border border-teal-200 p-4 text-sm text-teal-800">{{ session('status') }}</div>
+                <div role="status" class="mb-4 rounded-xl bg-teal-50 border border-teal-200 p-4 text-sm text-teal-800">@if(session('report_uploaded'))<p class="mb-1 font-bold">File uploaded successfully.</p>@endif{{ session('status') }}</div>
             @endif
 
             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">

@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class LabAssistantController extends Controller
 {
@@ -103,6 +104,10 @@ class LabAssistantController extends Controller
 
         $path = $request->file('report_file')->store('lab-reports', 'private');
 
+        if ($path === false) {
+            throw ValidationException::withMessages(['report_file' => 'The report could not be saved. Please try again.']);
+        }
+
         $updated = LabReport::query()
             ->whereKey($report->id)
             ->where('upload_status', 'pending_upload')
@@ -163,6 +168,7 @@ class LabAssistantController extends Controller
 
         return redirect()
             ->route('lab.history')
+            ->with('report_uploaded', true)
             ->with('status', $stored->reference.' uploaded.');
     }
 

@@ -76,7 +76,7 @@
                 <form id="delay-form" class="mt-4 flex flex-wrap items-end gap-3" onsubmit="event.preventDefault(); postQueueAction('{{ route('doctor.queue.delay') }}', { minutes: document.getElementById('delay-minutes').value });">
                     <div>
                         <label for="delay-minutes" class="block text-xs font-semibold text-gray-500 mb-1">Delay in minutes</label>
-                        <input id="delay-minutes" type="number" min="0" max="180" value="{{ (int) ($liveQueue->delay_minutes ?? 0) }}" class="w-28 rounded-lg border-gray-300 text-sm">
+                        <input id="delay-minutes" type="number" min="0" max="180" value="{{ (int) ($liveQueue->delay_minutes ?? 0) }}" class="w-28 rounded-lg text-sm border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20">
                     </div>
                     <button type="submit" class="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold">Save delay</button>
                     <button type="button" class="px-3 py-2 rounded-lg border border-gray-300 text-xs font-semibold" onclick="postQueueAction('{{ route('doctor.queue.pause') }}')">Pause or resume</button>

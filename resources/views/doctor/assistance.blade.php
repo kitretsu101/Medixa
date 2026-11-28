@@ -27,7 +27,7 @@
                     @else
                         <form method="POST" action="{{ route('doctor.assistance.respond', $item) }}" class="space-y-2">
                             @csrf
-                            <textarea name="response" rows="3" class="w-full rounded-xl border-slate-300 text-sm" placeholder="Write a short reply" required>{{ old('response') }}</textarea>
+                            <textarea name="response" rows="3" class="w-full rounded-xl text-sm border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20" placeholder="Write a short reply" required>{{ old('response') }}</textarea>
                             @error('response')<p class="text-xs text-rose-600">{{ $message }}</p>@enderror
                             <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg">Send response</button>
                         </form>

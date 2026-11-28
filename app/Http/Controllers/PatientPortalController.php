@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\AppointmentFeedback;
 use App\Models\AssistanceRequest;
-use App\Models\AuditLog;
 use App\Models\ConsentToken;
 use App\Models\Hospital;
 use App\Models\LabReport;
@@ -50,7 +49,6 @@ class PatientPortalController extends Controller
 
         $prescriptionCount = Prescription::where('patient_id', $userId)->count();
         $labReportCount = LabReport::where('patient_id', $userId)->count();
-        $activeConsentsCount = $this->consentService->activeTokensForPatient($userId)->count();
         $openAssistanceCount = AssistanceRequest::where('patient_id', $userId)->where('status', 'open')->count();
 
         $recentPrescriptions = Prescription::where('patient_id', $userId)
@@ -77,7 +75,6 @@ class PatientPortalController extends Controller
         return view('patient.dashboard', compact(
             'prescriptionCount',
             'labReportCount',
-            'activeConsentsCount',
             'openAssistanceCount',
             'recentPrescriptions',
             'recentLabReports',
@@ -207,19 +204,11 @@ class PatientPortalController extends Controller
     // ─── Consent Center ──────────────────────────────────────────────
 
     /**
-     * Display the Consent Center: token list + audit log viewer.
+     * Keep historical notification links working after retiring the patient consent UI.
      */
-    public function consentCenter(): View
+    public function consentCenter(): RedirectResponse
     {
-        $userId = Auth::id();
-
-        $tokens = $this->consentService->allTokensForPatient($userId);
-        $auditLogs = AuditLog::where('patient_id', $userId)
-            ->with(['actor', 'consentToken'])
-            ->latest('accessed_at')
-            ->get();
-
-        return view('patient.consent-center', compact('tokens', 'auditLogs'));
+        return redirect()->route('patient.dashboard');
     }
 
     /**
@@ -280,6 +269,10 @@ class PatientPortalController extends Controller
         $filePath = $request->file('report_file')
             ->store('reports', 'private');
 
+        if ($filePath === false) {
+            throw ValidationException::withMessages(['report_file' => 'The report could not be saved. Please try again.']);
+        }
+
         // Create the lab report row
         $labReport = LabReport::create([
             'patient_id' => Auth::id(),
@@ -315,6 +308,7 @@ class PatientPortalController extends Controller
         }
 
         return redirect()->route('patient.timeline')
+            ->with('report_uploaded', true)
             ->with('status', 'Lab report uploaded. A 24-hour consent token has been automatically issued to the assigned doctor.');
     }
 

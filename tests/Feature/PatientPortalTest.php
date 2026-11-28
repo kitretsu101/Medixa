@@ -42,7 +42,7 @@ class PatientPortalTest extends TestCase
         $response->assertViewIs('patient.dashboard');
         $response->assertViewHas('prescriptionCount', 0);
         $response->assertViewHas('labReportCount', 0);
-        $response->assertViewHas('activeConsentsCount', 0);
+        $response->assertDontSee('Active Consents')->assertDontSee('Consent Center')->assertDontSee('Consent & Audit');
     }
 
     public function test_patient_can_view_and_update_profile(): void
@@ -112,7 +112,7 @@ class PatientPortalTest extends TestCase
         $response->assertSee('Cetirizine');
     }
 
-    public function test_patient_can_view_consent_center_and_revoke_token(): void
+    public function test_retired_consent_center_redirects_without_disabling_existing_token_revocation(): void
     {
         $patient = User::factory()->patient()->create();
         $doctor = User::factory()->doctor()->create();
@@ -127,9 +127,7 @@ class PatientPortalTest extends TestCase
         );
 
         $response = $this->actingAs($patient)->get(route('patient.consent-center'));
-        $response->assertOk();
-        $response->assertViewIs('patient.consent-center');
-        $response->assertSee($doctor->name);
+        $response->assertRedirect(route('patient.dashboard'));
 
         // Revoke token
         $revokeResponse = $this->actingAs($patient)->post(route('patient.consent.revoke', $token->id));

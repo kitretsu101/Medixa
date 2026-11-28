@@ -98,7 +98,7 @@
                                             <form method="POST" action="{{ route('doctor.lab-reports.review', $report) }}" class="inline-flex flex-wrap justify-end gap-2 mt-2">
                                                 @csrf
                                                 <label class="sr-only" for="outcome-{{ $report->id }}">Clinical outcome</label>
-                                                <select id="outcome-{{ $report->id }}" name="clinical_outcome" class="rounded-lg border-gray-300 text-xs" required>
+                                                <select id="outcome-{{ $report->id }}" name="clinical_outcome" class="rounded-lg text-xs border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20" required>
                                                     <option value="routine_follow_up">Routine follow-up</option>
                                                     <option value="needs_attention">Needs attention</option>
                                                     <option value="urgent_clinical_review">Urgent clinical review</option>

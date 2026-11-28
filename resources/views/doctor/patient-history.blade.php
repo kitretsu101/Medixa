@@ -31,7 +31,7 @@
                 @csrf
                 <div class="flex-1">
                     <label for="test_name" class="block text-xs font-semibold uppercase tracking-wide text-gray-500">Order a laboratory test</label>
-                    <input id="test_name" name="test_name" value="{{ old('test_name') }}" placeholder="Complete Blood Count (CBC)" class="mt-1 block w-full rounded-lg border-gray-300 text-sm">
+                    <input id="test_name" name="test_name" value="{{ old('test_name') }}" placeholder="Complete Blood Count (CBC)" class="mt-1 block w-full rounded-lg text-sm border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20">
                     @error('test_name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror

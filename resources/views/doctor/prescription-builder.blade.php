@@ -66,7 +66,7 @@
                         </label>
                         <textarea id="diagnosis" name="diagnosis" rows="3" required
                                   placeholder="e.g. Acute Viral Bronchitis, mild dehydration, normotensive."
-                                  class="w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 text-sm transition">{{ old('diagnosis') }}</textarea>
+                                  class="w-full rounded-xl text-sm transition border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20">{{ old('diagnosis') }}</textarea>
                     </div>
 
                     <!-- Dynamic Medicines Builder (Alpine.js) -->
@@ -93,26 +93,26 @@
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">Medicine Name</label>
                                         <input type="text" :name="`medicines[${index}][name]`" x-model="medicine.name" required
                                                placeholder="e.g. Amoxicillin"
-                                               class="w-full rounded-lg border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-200">
+                                               class="w-full rounded-lg text-xs border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20">
                                     </div>
                                     <div class="sm:col-span-2">
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">Dosage</label>
                                         <input type="text" :name="`medicines[${index}][dosage]`" x-model="medicine.dosage" required
                                                placeholder="e.g. 500mg"
-                                               class="w-full rounded-lg border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-200">
+                                               class="w-full rounded-lg text-xs border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20">
                                     </div>
                                     <div class="sm:col-span-3">
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">Frequency</label>
                                         <input type="text" :name="`medicines[${index}][frequency]`" x-model="medicine.frequency"
                                                placeholder="e.g. 1-0-1 (After meal)"
-                                               class="w-full rounded-lg border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-200">
+                                               class="w-full rounded-lg text-xs border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20">
                                     </div>
                                     <div class="sm:col-span-2">
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">Duration</label>
                                         <input type="text" :name="`medicines[${index}][duration]`" x-model="medicine.duration"
                                                list="duration-presets"
                                                placeholder="e.g. 5 days, 2 months"
-                                               class="w-full rounded-lg border-gray-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-indigo-200">
+                                               class="w-full rounded-lg text-xs border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20">
                                         <div class="flex flex-wrap gap-1 mt-1">
                                             <button type="button" @click="medicine.duration = '5 days'" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 transition">5d</button>
                                             <button type="button" @click="medicine.duration = '7 days'" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 transition">7d</button>
@@ -151,7 +151,7 @@
                         </label>
                         <textarea id="instructions" name="instructions" rows="3"
                                   placeholder="e.g. Drink plenty of warm fluids. Bed rest for 3 days. Follow up if fever persists."
-                                  class="w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 text-sm transition">{{ old('instructions') }}</textarea>
+                                  class="w-full rounded-xl text-sm transition border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20">{{ old('instructions') }}</textarea>
                     </div>
 
                     <!-- Actions -->

@@ -5,7 +5,7 @@
                 <h2 class="text-2xl font-bold text-slate-900 tracking-tight">
                     {{ __('Patient Portal') }}
                 </h2>
-                <p class="text-sm text-slate-500">Welcome back, {{ Auth::user()->name }}. Here is an overview of your medical records and active consents.</p>
+                <p class="text-sm text-slate-500">Welcome back, {{ Auth::user()->name }}. Here is an overview of your medical records.</p>
             </div>
             <div class="flex items-center gap-3">
                 <a href="{{ route('patient.lab-reports.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-sm transition">
@@ -97,7 +97,7 @@
             @endif
 
             <!-- Quick Stats Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <!-- Prescriptions Card -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition">
                     <div class="flex items-center justify-between">
@@ -130,22 +130,6 @@
                     </div>
                 </div>
 
-                <!-- Active Consents Card -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Consents</p>
-                            <h3 class="text-3xl font-extrabold text-emerald-600 mt-1">{{ $activeConsentsCount }}</h3>
-                        </div>
-                        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between text-xs">
-                        <a href="{{ route('patient.consent-center') }}" class="text-emerald-600 hover:text-emerald-800 font-medium">Consent Center &rarr;</a>
-                    </div>
-                </div>
-
                 <!-- Assistance Requests Card -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition">
                     <div class="flex items-center justify-between">
@@ -164,7 +148,7 @@
             </div>
 
             <!-- Quick Access Navigation Banners -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <!-- Medicine Tracker PWA Link -->
                 <a href="{{ route('tracker.app') }}" class="group block p-6 bg-gradient-to-br from-teal-900 to-emerald-700 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5 border border-teal-600/30">
                     <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition">
@@ -183,16 +167,6 @@
                     <span class="inline-block px-2 py-0.5 rounded-full bg-indigo-400/20 text-indigo-200 text-[10px] font-bold uppercase tracking-wider mb-1">Records</span>
                     <h4 class="text-base font-bold mb-1">Unified Timeline</h4>
                     <p class="text-xs text-indigo-200">Chronological history of prescriptions and diagnostics.</p>
-                </a>
-
-                <!-- Consent Center Link -->
-                <a href="{{ route('patient.consent-center') }}" class="group block p-6 bg-gradient-to-br from-teal-950 to-teal-800 rounded-2xl text-white shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5">
-                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    </div>
-                    <span class="inline-block px-2 py-0.5 rounded-full bg-teal-400/20 text-teal-200 text-[10px] font-bold uppercase tracking-wider mb-1">Security</span>
-                    <h4 class="text-base font-bold mb-1">Consent & Audit</h4>
-                    <p class="text-xs text-teal-200">Manage time-bound access tokens and immutable logs.</p>
                 </a>
 
                 <!-- Health Profile Link -->

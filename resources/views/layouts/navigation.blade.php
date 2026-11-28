@@ -26,9 +26,6 @@
                         <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
                             {{ __('Notifications') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('patient.consent-center')" :active="request()->routeIs('patient.consent-center')">
-                            {{ __('Consent Center') }}
-                        </x-nav-link>
                         <x-nav-link :href="route('patient.profile')" :active="request()->routeIs('patient.profile')">
                             {{ __('Health Profile') }}
                         </x-nav-link>
@@ -160,9 +157,6 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
                     {{ __('Notifications') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('patient.consent-center')" :active="request()->routeIs('patient.consent-center')">
-                    {{ __('Consent Center') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('patient.profile')" :active="request()->routeIs('patient.profile')">
                     {{ __('Health Profile') }}

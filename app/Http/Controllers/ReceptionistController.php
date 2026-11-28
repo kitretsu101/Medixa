@@ -7,9 +7,11 @@ use App\Models\User;
 use App\Services\AppointmentService;
 use App\Services\NotificationService;
 use App\Services\QueueService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -36,11 +38,11 @@ class ReceptionistController extends Controller
             ->orderBy('serial_number')
             ->get(['id', 'patient_id', 'doctor_id', 'serial_number', 'status', 'priority_type', 'visit_type', 'checked_in_at']);
 
-        $requests = Appointment::where('hospital_id', $request->user()->hospital_id)
-            ->where('status', 'pending')->with(['patient', 'doctor', 'hospital'])
-            ->orderBy('appointment_date')->orderBy('serial_number')->take(10)->get();
+        $requests = $this->bookingRequests($request, (int) $request->user()->hospital_id, 'appointment_oldest')
+            ->where('status', 'pending')->take(10)->get();
+        $doctors = User::doctors()->where('hospital_id', $request->user()->hospital_id)->orderBy('name')->get(['id', 'name']);
 
-        return view('receptionist.dashboard', compact('visits', 'requests'));
+        return view('receptionist.dashboard', compact('visits', 'requests', 'doctors'));
     }
 
     public function create(Request $request): View
@@ -101,11 +103,36 @@ class ReceptionistController extends Controller
 
     public function appointments(Request $request): View
     {
-        $requests = Appointment::where('hospital_id', $this->assignedHospitalId($request))
-            ->with(['patient', 'doctor', 'hospital'])->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")
-            ->orderByDesc('appointment_date')->orderByDesc('id')->paginate(20);
+        $hospitalId = $this->assignedHospitalId($request);
+        $requests = $this->bookingRequests($request, $hospitalId)->paginate(20)->withQueryString();
+        $doctors = User::doctors()->where('hospital_id', $hospitalId)->orderBy('name')->get(['id', 'name']);
 
-        return view('receptionist.appointments', compact('requests'));
+        return view('receptionist.appointments', compact('requests', 'doctors'));
+    }
+
+    private function bookingRequests(Request $request, int $hospitalId, string $defaultSort = 'pending'): Builder
+    {
+        $filters = $request->validate([
+            'doctor_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', 'doctor')->where('hospital_id', $hospitalId)],
+            'appointment_date' => ['nullable', 'date_format:Y-m-d'],
+            'sort' => ['nullable', Rule::in(['pending', 'appointment_newest', 'appointment_oldest', 'doctor', 'created_newest', 'created_oldest'])],
+        ]);
+        $query = Appointment::where('hospital_id', $hospitalId)->with(['patient', 'doctor', 'hospital']);
+        if (! empty($filters['doctor_id'])) {
+            $query->where('doctor_id', $filters['doctor_id']);
+        }
+        if (! empty($filters['appointment_date'])) {
+            $query->whereDate('appointment_date', $filters['appointment_date']);
+        }
+
+        return match ($filters['sort'] ?? $defaultSort) {
+            'appointment_newest' => $query->orderByDesc('appointment_date')->orderByDesc('id'),
+            'appointment_oldest' => $query->orderBy('appointment_date')->orderBy('serial_number')->orderBy('id'),
+            'doctor' => $query->orderBy(User::select('name')->whereColumn('users.id', 'appointments.doctor_id'))->orderBy('appointment_date')->orderBy('id'),
+            'created_newest' => $query->orderByDesc('created_at')->orderByDesc('id'),
+            'created_oldest' => $query->orderBy('created_at')->orderBy('id'),
+            default => $query->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")->orderByDesc('appointment_date')->orderByDesc('id'),
+        };
     }
 
     public function showAppointment(Request $request, Appointment $appointment): View

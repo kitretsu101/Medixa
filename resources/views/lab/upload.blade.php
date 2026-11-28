@@ -44,6 +44,7 @@
                             <label for="report_file" class="block text-sm font-semibold text-slate-700">Select report</label>
                             <input id="report_file" name="report_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" class="mt-2 block w-full text-sm">
                             <p class="mt-1 text-xs text-slate-500">PDF, JPG, or PNG. Maximum 10 MB.</p>
+                            <x-report-file-selection />
                             @error('report_file')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror

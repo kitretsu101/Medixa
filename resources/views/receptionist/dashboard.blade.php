@@ -19,6 +19,7 @@
             @else
                 <div class="mb-5 space-y-4"><div class="flex flex-wrap items-center justify-between gap-3"><h3 class="text-lg font-bold text-slate-900">{{ auth()->user()->hospital?->name }} · Pending requests</h3><a href="{{ route('receptionist.appointments.index') }}" class="font-semibold text-teal-700">All hospital appointments</a></div>
                     @error('appointment')<p class="text-sm text-rose-700">{{ $message }}</p>@enderror
+                    @include('receptionist.partials.booking-filters', ['defaultSort' => 'appointment_oldest'])
                     @include('receptionist.partials.appointment-requests')
                 </div>
             @endif
